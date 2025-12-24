@@ -23,11 +23,11 @@ export function Tooltip({ children, text, gradientFrom, gradientTo }: TooltipPro
       {/* Only render tooltip after client mount to prevent hydration errors */}
       {isMounted && (
         <div
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50
+          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50
             opacity-0 pointer-events-none
             group-hover/tooltip:opacity-100
             transition-all duration-200 ease-out
-            -translate-y-1 group-hover/tooltip:translate-y-0"
+            translate-y-1 group-hover/tooltip:translate-y-0"
         >
           {/* Tooltip Content */}
           <div className="relative px-3 py-1.5 bg-white/90 backdrop-blur-md rounded-lg shadow-lg border border-white/50">
@@ -38,9 +38,9 @@ export function Tooltip({ children, text, gradientFrom, gradientTo }: TooltipPro
             </span>
           </div>
 
-          {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-0.5">
-            <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white/90"></div>
+          {/* Arrow - Pointing Up */}
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 -mb-0.5">
+            <div className="w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-white/90"></div>
           </div>
         </div>
       )}
