@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,97 +11,133 @@ const videos = [
 ];
 
 export default function HeroSection() {
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  // Dual video system state
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
+  const [preloadVideoIndex, setPreloadVideoIndex] = useState(1);
+  const [showingActive, setShowingActive] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [showSoundIndicator, setShowSoundIndicator] = useState(true);
 
+  // Refs for both video elements
+  const activeVideoRef = useRef<HTMLVideoElement>(null);
+  const preloadVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Sound toggle for both videos
   const toggleSound = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+    const newMutedState = !isMuted;
+    if (activeVideoRef.current) {
+      activeVideoRef.current.muted = newMutedState;
     }
+    if (preloadVideoRef.current) {
+      preloadVideoRef.current.muted = newMutedState;
+    }
+    setIsMuted(newMutedState);
+    setShowSoundIndicator(false); // Hide indicator after first click
   };
 
-  const handleVideoEnd = () => {
-    // Move to next video in the array
-    setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % videos.length);
-  };
+  // Handle active video ending - crossfade to preload
+  const handleActiveVideoEnd = () => {
+    // Switch to showing preload video
+    setShowingActive(false);
 
-  useEffect(() => {
-    // Autoplay video when component mounts or video changes
-    if (videoRef.current) {
-      videoRef.current.play().catch((error) => {
-        console.log("Autoplay prevented:", error);
+    // Update indices for next cycle
+    const nextIndex = (preloadVideoIndex + 1) % videos.length;
+    setActiveVideoIndex(preloadVideoIndex);
+    setPreloadVideoIndex(nextIndex);
+
+    // Ensure preload video plays
+    if (preloadVideoRef.current) {
+      preloadVideoRef.current.currentTime = 0;
+      preloadVideoRef.current.play().catch((error) => {
+        console.log("Preload video play prevented:", error);
       });
     }
-  }, [currentVideoIndex]);
+  };
+
+  // Handle preload video ending - crossfade to active
+  const handlePreloadVideoEnd = () => {
+    // Switch to showing active video
+    setShowingActive(true);
+
+    // Update indices for next cycle
+    const nextIndex = (activeVideoIndex + 1) % videos.length;
+    setPreloadVideoIndex(activeVideoIndex);
+    setActiveVideoIndex(nextIndex);
+
+    // Ensure active video plays
+    if (activeVideoRef.current) {
+      activeVideoRef.current.currentTime = 0;
+      activeVideoRef.current.play().catch((error) => {
+        console.log("Active video play prevented:", error);
+      });
+    }
+  };
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
-      {/* Video Background */}
+      {/* Dual Video Background System */}
       <div className="absolute inset-0 w-full h-full">
+        {/* Active Video */}
         <video
-          ref={videoRef}
-          className="w-full h-full object-cover"
+          ref={activeVideoRef}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            showingActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+          }`}
           autoPlay
           muted={isMuted}
           playsInline
-          onLoadedData={() => setIsVideoLoaded(true)}
-          onEnded={handleVideoEnd}
-          key={currentVideoIndex}
+          onEnded={handleActiveVideoEnd}
         >
-          <source src={videos[currentVideoIndex]} type="video/mp4" />
+          <source src={videos[activeVideoIndex]} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+
+        {/* Preload Video */}
+        <video
+          ref={preloadVideoRef}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            !showingActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
+          }`}
+          muted={isMuted}
+          playsInline
+          preload="auto"
+          onEnded={handlePreloadVideoEnd}
+        >
+          <source src={videos[preloadVideoIndex]} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
 
         {/* Dark Gradient Overlay for text readability */}
-        <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70"></div>
+        <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70 z-20"></div>
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center h-full px-6 md:px-12 lg:px-24">
-        <div className="max-w-5xl text-center">
-          {/* Main Heading */}
-          <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-extrabold mb-6 leading-tight">
-            <span className="bg-linear-to-r from-orange-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
-              AI FILM
-            </span>
-            <br />
-            <span className="text-white">
-              PRODUCTION
-            </span>
-            <br />
-            <span className="bg-linear-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-              WITHOUT LIMITS
-            </span>
-          </h1>
-
+      <div className="relative z-30 flex flex-col items-start justify-center h-full px-6 md:px-12 lg:px-24">
+        <div className="max-w-2xl text-left mt-85">
           {/* Subtitle */}
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-200 mb-8 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl lg:text-2xl text-gray-200 mb-8">
             Transform your creative vision into reality with AI-powered
             film production technology
           </p>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="bg-linear-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-semibold px-8 py-6 text-lg shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/50 hover:scale-105 transition-all duration-300">
-              Get Started
-            </Button>
-            <Button
-              variant="outline"
-              className="border-white/30 bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-semibold px-8 py-6 text-lg hover:scale-105 transition-all duration-300"
-            >
-              Watch Demo
-            </Button>
-          </div>
         </div>
       </div>
+
+      {/* Sound Indicator - Animated */}
+      {showSoundIndicator && (
+        <div className="fixed bottom-8 right-24 z-40 animate-bounce">
+          <div className="px-4 py-2 bg-white/90 backdrop-blur-md rounded-full border border-white/50 shadow-lg flex items-center gap-2">
+            <span className="text-sm font-semibold bg-linear-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+              Turn on sound
+            </span>
+            <span className="text-orange-500">→</span>
+          </div>
+        </div>
+      )}
 
       {/* Sound Toggle Button */}
       <button
         onClick={toggleSound}
-        className="fixed bottom-8 right-8 z-20 w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110 group"
+        className="fixed bottom-8 right-8 z-40 w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center hover:bg-white/20 transition-all duration-300 hover:scale-110 group"
         aria-label={isMuted ? "Unmute video" : "Mute video"}
       >
         {isMuted ? (
@@ -112,7 +148,7 @@ export default function HeroSection() {
       </button>
 
       {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 animate-bounce">
         <div className="w-6 h-10 rounded-full border-2 border-white/30 flex justify-center pt-2">
           <div className="w-1 h-3 bg-white/50 rounded-full"></div>
         </div>
