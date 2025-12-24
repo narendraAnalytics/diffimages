@@ -22,6 +22,7 @@ import {
 export default function Navbar() {
   const [isMounted, setIsMounted] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const [isTransparent, setIsTransparent] = useState(true);
   const lastScrollYRef = useRef(0);
 
   useEffect(() => {
@@ -29,6 +30,13 @@ export default function Navbar() {
 
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+
+      // Make navbar solid after scrolling past hero
+      if (currentScrollY > 100) {
+        setIsTransparent(false);
+      } else {
+        setIsTransparent(true);
+      }
 
       if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
         setIsScrollingDown(true);
@@ -98,11 +106,15 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-7xl transition-transform duration-300 ease-in-out ${
-        isMounted && isScrollingDown ? "-translate-y-[150%]" : "translate-y-0"
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
+        isMounted && isScrollingDown ? "-translate-y-full" : "translate-y-0"
+      } ${
+        isTransparent
+          ? "bg-transparent"
+          : "bg-linear-to-br from-orange-50/95 via-yellow-50/95 to-pink-50/95 backdrop-blur-md"
       }`}
     >
-      <div className="px-6 py-4 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center gap-3">
           <Image

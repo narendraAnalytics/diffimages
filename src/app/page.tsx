@@ -1,13 +1,18 @@
 import Navbar from "@/components/navbar";
+import HeroSection from "@/components/hero-section";
 
 export default function Home() {
   return (
-    <div className="w-full min-h-screen bg-linear-to-br from-orange-50 via-yellow-50 to-pink-50">
+    <div className="w-full min-h-screen">
+      {/* Navbar - now transparent and overlaid */}
       <Navbar />
 
-      {/* Main content sections will go here */}
-      <main className="pt-32">
-        {/* Add spacing for navbar */}
+      {/* Hero Section with Video Background */}
+      <HeroSection />
+
+      {/* Other sections */}
+      <main className="relative z-10">
+        {/* Future content sections */}
       </main>
     </div>
   );
