@@ -20,9 +20,9 @@ import {
 } from "lucide-react";
 
 export default function Navbar() {
-  const [isMounted, setIsMounted] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [isTransparent, setIsTransparent] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const lastScrollYRef = useRef(0);
 
   useEffect(() => {
@@ -106,6 +106,7 @@ export default function Navbar() {
 
   return (
     <nav
+      suppressHydrationWarning
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
         isMounted && isScrollingDown ? "-translate-y-full" : "translate-y-0"
       } ${

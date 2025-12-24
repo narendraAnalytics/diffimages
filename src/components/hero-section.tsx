@@ -12,7 +12,7 @@ const videos = [
 
 export default function HeroSection() {
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -56,7 +56,7 @@ export default function HeroSection() {
         </video>
 
         {/* Dark Gradient Overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
+        <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70"></div>
       </div>
 
       {/* Hero Content */}
