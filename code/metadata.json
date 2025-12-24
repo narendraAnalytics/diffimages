@@ -1,0 +1,7 @@
+{
+  "name": "DiffGen Image",
+  "description": "A Spot-the-Difference game powered by Generative AI. Features real-time voice interaction, image editing, and dynamic puzzle generation.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
