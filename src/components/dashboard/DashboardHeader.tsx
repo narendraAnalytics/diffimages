@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { UserButton } from '@clerk/nextjs';
+
 
 export default function DashboardHeader() {
   return (
@@ -19,7 +19,7 @@ export default function DashboardHeader() {
             DiffGen Dashboard
           </h1>
         </div>
-        <UserButton afterSignOutUrl="/" />
+
       </div>
     </header>
   );
