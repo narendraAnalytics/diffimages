@@ -223,6 +223,8 @@ export default function DashboardPage() {
             gameOver={gameOver}
             revealing={revealing}
             differences={differences}
+            logicSolution={logicSolution}
+            onPlayAgain={handlePlayAgain}
           />
         </div>
 
@@ -253,20 +255,12 @@ export default function DashboardPage() {
                 gameOver={gameOver}
               />
 
-              {!gameOver ? (
+              {!gameOver && (
                 <GameResponse
                   gameMode={gameMode}
                   checking={checking}
                   feedback={feedback}
                   onSubmit={handleSubmit}
-                />
-              ) : (
-                <GameResults
-                  gameMode={gameMode}
-                  revealing={revealing}
-                  differences={differences}
-                  logicSolution={logicSolution}
-                  onPlayAgain={handlePlayAgain}
                 />
               )}
             </>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from 'react';
-import { Brain, ArrowRight, RotateCcw, Maximize2 } from 'lucide-react';
+import { Brain, ArrowRight, RotateCcw, MessageSquare, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GameMode, DiffGameData, LogicGameData, Difference } from '@/lib/gemini/types';
@@ -14,6 +14,8 @@ interface GameAreaProps {
   gameOver: boolean;
   revealing: boolean;
   differences: Difference[];
+  logicSolution: string | null;
+  onPlayAgain: () => void;
 }
 
 const cleanText = (text: string | null | undefined): string => {
@@ -28,7 +30,9 @@ export default function GameArea({
   logicGame,
   gameOver,
   revealing,
-  differences
+  differences,
+  logicSolution,
+  onPlayAgain
 }: GameAreaProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -203,7 +207,7 @@ export default function GameArea({
 
           {/* Zoom Controls */}
           {(images || singleImage) && (
-            <div className="absolute bottom-4 right-4 z-20 flex gap-2 p-2 bg-white/95 backdrop-blur border border-zinc-200 rounded-xl shadow-md">
+            <div className="absolute top-4 right-4 z-20 flex gap-2 p-2 bg-white/95 backdrop-blur border border-zinc-200 rounded-xl shadow-md">
               <Button
                 variant="ghost"
                 size="icon-sm"
@@ -229,6 +233,73 @@ export default function GameArea({
               >
                 <RotateCcw className="w-4 h-4" />
               </Button>
+            </div>
+          )}
+          {/* Game Results Integration */}
+          {gameOver && (
+            <div className="border-t border-zinc-100 bg-white/50 p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="max-w-4xl mx-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold text-zinc-900 uppercase tracking-widest flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                    Game Results
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onPlayAgain}
+                    className="border-2 border-zinc-900 font-bold hover:bg-zinc-900 hover:text-white transition-all"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Play Again
+                  </Button>
+                </div>
+
+                {revealing ? (
+                  <div className="flex flex-col items-center justify-center py-8 gap-3 text-zinc-400">
+                    <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+                    <span className="text-xs uppercase font-bold">Revealing answers...</span>
+                  </div>
+                ) : gameMode === 'LOGIC' ? (
+                  <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
+                    <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
+                      <MessageSquare className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-blue-600 uppercase mb-1 block">The Solution</span>
+                      <p className="text-zinc-700 leading-relaxed font-medium">
+                        {cleanText(logicSolution)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {differences.length === 0 ? (
+                      <p className="col-span-2 text-sm text-zinc-500 text-center py-8 bg-zinc-50 rounded-xl border border-dashed border-zinc-200">
+                        No results to display
+                      </p>
+                    ) : (
+                      differences.map((diff) => (
+                        <div
+                          key={diff.id}
+                          className="flex gap-4 items-start p-4 bg-white rounded-xl border border-zinc-100 shadow-sm hover:shadow-md transition-shadow"
+                        >
+                          <span
+                            className={`w-8 h-8 shrink-0 ${
+                              gameMode === 'DIFF' ? 'bg-zinc-900' : 'bg-amber-600'
+                            } text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-sm`}
+                          >
+                            {diff.id}
+                          </span>
+                          <p className="text-sm leading-relaxed text-zinc-600 font-medium">
+                            {diff.description}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </>
