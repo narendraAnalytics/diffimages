@@ -18,6 +18,17 @@ interface GameAreaProps {
   onPlayAgain: () => void;
 }
 
+const COLOR_PALETTE = [
+  'bg-linear-to-br from-orange-400 to-pink-500',
+  'bg-linear-to-br from-blue-400 to-indigo-600',
+  'bg-linear-to-br from-emerald-400 to-teal-600',
+  'bg-linear-to-br from-purple-400 to-indigo-600',
+  'bg-linear-to-br from-rose-400 to-pink-600',
+  'bg-linear-to-br from-amber-400 to-orange-600',
+  'bg-linear-to-br from-cyan-400 to-blue-600',
+  'bg-linear-to-br from-fuchsia-400 to-purple-600',
+];
+
 const cleanText = (text: string | null | undefined): string => {
   if (!text) return "";
   return text.replace(/\*\*/g, "");
@@ -245,10 +256,9 @@ export default function GameArea({
                     Game Results
                   </h3>
                   <Button
-                    variant="outline"
                     size="sm"
                     onClick={onPlayAgain}
-                    className="border-2 border-zinc-900 font-bold hover:bg-zinc-900 hover:text-white transition-all"
+                    className="bg-linear-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-bold border-none shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-300"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Play Again
@@ -279,14 +289,14 @@ export default function GameArea({
                         No results to display
                       </p>
                     ) : (
-                      differences.map((diff) => (
+                      differences.map((diff, index) => (
                         <div
                           key={diff.id}
                           className="flex gap-4 items-start p-4 bg-white rounded-xl border border-zinc-100 shadow-sm hover:shadow-md transition-shadow"
                         >
                           <span
                             className={`w-8 h-8 shrink-0 ${
-                              gameMode === 'DIFF' ? 'bg-zinc-900' : 'bg-amber-600'
+                              COLOR_PALETTE[index % COLOR_PALETTE.length]
                             } text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-sm`}
                           >
                             {diff.id}
