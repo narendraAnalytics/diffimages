@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 const videos = [
   '/videos/video2.mp4',
   '/videos/video3.mp4',
-  '/videos/videolearning1.mp4'
+  '/videos/video1.mp4'
 ];
 
 export default function HeroSection() {
@@ -40,13 +40,26 @@ export default function HeroSection() {
     // Switch to showing preload video
     setShowingActive(false);
 
-    // Update indices for next cycle
-    const nextIndex = (preloadVideoIndex + 1) % videos.length;
-    setActiveVideoIndex(preloadVideoIndex);
-    setPreloadVideoIndex(nextIndex);
+    // Pause the active video that's becoming hidden
+    if (activeVideoRef.current) {
+      activeVideoRef.current.pause();
+    }
+
+    // Update indices for next cycle - skip currently visible video
+    const nextActiveIndex = (activeVideoIndex + 2) % videos.length;
+    setActiveVideoIndex(nextActiveIndex);
+
+    // Reload new source in active video AFTER transition completes
+    setTimeout(() => {
+      if (activeVideoRef.current) {
+        activeVideoRef.current.pause(); // Ensure it's paused
+        activeVideoRef.current.load();
+      }
+    }, 1100); // Wait for 1000ms CSS transition + 100ms buffer
 
     // Ensure preload video plays
     if (preloadVideoRef.current) {
+      preloadVideoRef.current.muted = isMuted; // Sync muted state
       preloadVideoRef.current.currentTime = 0;
       preloadVideoRef.current.play().catch((error) => {
         console.log("Preload video play prevented:", error);
@@ -59,13 +72,26 @@ export default function HeroSection() {
     // Switch to showing active video
     setShowingActive(true);
 
-    // Update indices for next cycle
-    const nextIndex = (activeVideoIndex + 1) % videos.length;
-    setPreloadVideoIndex(activeVideoIndex);
-    setActiveVideoIndex(nextIndex);
+    // Pause the preload video that's becoming hidden
+    if (preloadVideoRef.current) {
+      preloadVideoRef.current.pause();
+    }
+
+    // Update indices for next cycle - skip currently visible video
+    const nextPreloadIndex = (preloadVideoIndex + 2) % videos.length;
+    setPreloadVideoIndex(nextPreloadIndex);
+
+    // Reload new source in preload video AFTER transition completes
+    setTimeout(() => {
+      if (preloadVideoRef.current) {
+        preloadVideoRef.current.pause(); // Ensure it's paused
+        preloadVideoRef.current.load();
+      }
+    }, 1100); // Wait for 1000ms CSS transition + 100ms buffer
 
     // Ensure active video plays
     if (activeVideoRef.current) {
+      activeVideoRef.current.muted = isMuted; // Sync muted state
       activeVideoRef.current.currentTime = 0;
       activeVideoRef.current.play().catch((error) => {
         console.log("Active video play prevented:", error);
@@ -83,7 +109,6 @@ export default function HeroSection() {
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
             showingActive ? 'opacity-100 z-10' : 'opacity-0 z-0'
           }`}
-          autoPlay
           muted={isMuted}
           playsInline
           onEnded={handleActiveVideoEnd}
