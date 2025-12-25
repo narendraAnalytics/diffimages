@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +21,15 @@ export default function HeroSection() {
   // Refs for both video elements
   const activeVideoRef = useRef<HTMLVideoElement>(null);
   const preloadVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Start playing the active video when component mounts
+  useEffect(() => {
+    if (activeVideoRef.current) {
+      activeVideoRef.current.play().catch((error) => {
+        console.log("Initial autoplay prevented:", error);
+      });
+    }
+  }, []); // Empty dependency array - run once on mount
 
   // Sound toggle for both videos
   const toggleSound = () => {
@@ -111,6 +120,7 @@ export default function HeroSection() {
           }`}
           muted={isMuted}
           playsInline
+          preload="auto"
           onEnded={handleActiveVideoEnd}
         >
           <source src={videos[activeVideoIndex]} type="video/mp4" />

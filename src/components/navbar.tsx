@@ -177,52 +177,54 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden hover:bg-white/20"
+        {isMounted && (
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden hover:bg-white/20"
+              >
+                <Menu className="h-5 w-5 text-gray-800" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="bg-linear-to-br from-orange-50 via-yellow-50 to-pink-50 border-white/20"
             >
-              <Menu className="h-5 w-5 text-gray-800" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent
-            side="right"
-            className="bg-linear-to-br from-orange-50 via-yellow-50 to-pink-50 border-white/20"
-          >
-            <nav className="flex flex-col gap-4 mt-8">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className={`group flex items-center gap-3 px-4 py-3 text-base font-medium
-                      text-gray-800 rounded-lg transition-all duration-300
-                      hover:bg-white/30
-                      ${item.hoverGradient}`}
-                  >
-                    <Icon className={`w-5 h-5 ${item.defaultColor} transition-transform duration-300 group-hover:scale-110 group-hover:text-white`} />
-                    <span className="group-hover:text-white transition-colors">{item.name}</span>
-                  </a>
-                );
-              })}
+              <nav className="flex flex-col gap-4 mt-8">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className={`group flex items-center gap-3 px-4 py-3 text-base font-medium
+                        text-gray-800 rounded-lg transition-all duration-300
+                        hover:bg-white/30
+                        ${item.hoverGradient}`}
+                    >
+                      <Icon className={`w-5 h-5 ${item.defaultColor} transition-transform duration-300 group-hover:scale-110 group-hover:text-white`} />
+                      <span className="group-hover:text-white transition-colors">{item.name}</span>
+                    </a>
+                  );
+                })}
 
-              {/* Decorative Icon in Mobile Menu */}
-              <div className="flex justify-center py-2">
-                <Sparkles className="w-8 h-8 text-orange-400/60 animate-pulse" />
-              </div>
+                {/* Decorative Icon in Mobile Menu */}
+                <div className="flex justify-center py-2">
+                  <Sparkles className="w-8 h-8 text-orange-400/60 animate-pulse" />
+                </div>
 
-              <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-white/20">
-                <Button variant="outline">Login</Button>
-                <Button className="bg-linear-to-r from-orange-500 to-pink-500">
-                  Get Started
-                </Button>
-              </div>
-            </nav>
-          </SheetContent>
-        </Sheet>
+                <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-white/20">
+                  <Button variant="outline">Login</Button>
+                  <Button className="bg-linear-to-r from-orange-500 to-pink-500">
+                    Get Started
+                  </Button>
+                </div>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
     </nav>
   );
