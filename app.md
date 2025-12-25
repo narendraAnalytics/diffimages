@@ -2407,3 +2407,320 @@ useEffect(() => {
 
 **End of Session 3 Documentation**
 *Last Updated: December 25, 2025*
+
+---
+
+---
+
+# Session 4: Protected Dashboard with AI-Powered Brain Training Games
+
+**Date:** December 25, 2025
+**Session Focus:** Dashboard Implementation, Gemini AI Integration, 3 Game Modes
+
+---
+
+## Session Summary
+
+In this session, we built a complete protected dashboard featuring three AI-powered brain training games. The dashboard integrates Google's Gemini AI through secure server-side API routes and provides an immersive gaming experience with real-time feedback, timer-based challenges, and comprehensive result displays.
+
+### What Was Accomplished
+
+- ✅ Created 8 secure API routes for Gemini AI integration
+- ✅ Built 7 modular dashboard components (GameModeSelector, GameArea, GameControls, GameTimer, GameResponse, GameResults, DashboardHeader)
+- ✅ Implemented 3 complete game modes: DIFF (spot differences), WRONG (find errors), LOGIC (IQ puzzles)
+- ✅ Added voice input support using Web Speech API
+- ✅ Implemented zoom/pan controls for images
+- ✅ Created timer system (15s countdown) with auto-reveal on timeout
+- ✅ Built scoring system (+1 DIFF, +2 WRONG, +10 LOGIC)
+- ✅ Added bounding box overlays for visual feedback
+- ✅ Updated hero section Welcome button to link to /dashboard
+- ✅ Maintained design consistency with landing page (glass-morphism, gradients)
+
+---
+
+## Project Context Update
+
+### Current State
+- **Framework:** Next.js 16.1.1 with React 19.2.3
+- **Authentication:** Clerk with username + email verification
+- **AI Integration:** Google Gemini AI (gemini-2.5-flash-image, gemini-3-flash-preview)
+- **Styling:** Tailwind CSS 4 with custom gradient system
+- **UI Components:** Shadcn UI component library
+- **Icons:** Lucide React (v0.562.0)
+- **Status:** Full-stack application with landing page, authentication, and protected dashboard
+
+---
+
+## Implementation Details
+
+### File Structure Created
+
+```
+src/
+├── app/
+│   ├── dashboard/
+│   │   ├── layout.tsx          # Dashboard layout with header
+│   │   └── page.tsx             # Main game interface (322 lines)
+│   └── api/gemini/
+│       ├── generate-diff/route.ts
+│       ├── generate-wrong/route.ts
+│       ├── generate-logic/route.ts
+│       ├── check-difference/route.ts
+│       ├── check-wrong/route.ts
+│       ├── check-logic/route.ts
+│       ├── get-differences/route.ts
+│       └── get-errors/route.ts
+├── components/dashboard/
+│   ├── DashboardHeader.tsx     # Home icon + UserButton
+│   ├── GameModeSelector.tsx    # 3 game mode cards
+│   ├── GameArea.tsx            # Image/question display
+│   ├── GameControls.tsx        # Subject input + generate
+│   ├── GameTimer.tsx           # Timer + score display
+│   ├── GameResponse.tsx        # User input + verify
+│   └── GameResults.tsx         # Results panel
+└── lib/gemini/
+    ├── types.ts                # TypeScript interfaces
+    └── client.ts               # Client-side API wrappers
+```
+
+### Modified Files
+
+| File | Changes |
+|------|---------|
+| `src/components/hero-section.tsx` | Added Link import, wrapped Welcome button with `<Link href="/dashboard">` |
+| `proxy.ts` | No changes needed - dashboard auto-protected |
+
+---
+
+## Game Modes
+
+### 1. DIFF Mode - Spot the Difference
+- **Description:** AI generates two similar images with 6-8 subtle differences
+- **Scoring:** +1 point per correct difference
+- **Visual Feedback:** Red boxes on original, green boxes on modified
+- **Model:** gemini-2.5-flash-image (generation), gemini-3-flash-preview (validation)
+
+### 2. WRONG Mode - Find Logical Errors
+- **Description:** AI generates single image with 5-7 intentional errors
+- **Examples:** Clock with 13 numbers, mismatched shoes, wrong shadows
+- **Scoring:** +2 points per correct error
+- **Visual Feedback:** Amber boxes highlighting errors
+- **Model:** gemini-2.5-flash-image (generation), gemini-3-flash-preview (validation)
+
+### 3. LOGIC Mode - IQ Puzzles
+- **Description:** AI generates unique logical puzzles with definitive answers
+- **Scoring:** +10 points for correct solution (game ends immediately)
+- **Visual Feedback:** Full solution explanation
+- **Model:** gemini-3-flash-preview (generation and validation)
+
+---
+
+## Key Features
+
+### Security
+- **API Route Protection:** All API routes protected with Clerk authentication
+- **Server-Side API Key:** Gemini API key never exposed to client
+- **Automatic Route Protection:** Dashboard auto-protected via existing middleware
+
+### Timer System
+- **Duration:** 15 seconds countdown
+- **Visual States:** Gray (normal), red with pulse (≤5s critical)
+- **Auto-Reveal:** Results shown automatically on timeout
+- **Manual Control:** "Give Up" button available
+
+### Voice Input
+- **Web Speech API** integration
+- **Dual Input:** Works for subject AND answer fields
+- **Visual Feedback:** Red background when listening
+- **Graceful Fallback:** Alert shown if unsupported
+
+### Image Controls
+- **Zoom:** In/out buttons (0.5 increments, max 4x)
+- **Pan:** Click and drag to move zoomed images
+- **Reset:** Single-click return to default view
+- **Touch Support:** Works on mobile/tablet
+
+### Bounding Box Overlays
+- **DIFF Mode:** Red (original), green (modified)
+- **WRONG Mode:** Amber boxes
+- **Positioning:** Percentage-based from Gemini coordinates
+- **Hover Behavior:** Boxes hidden while hovering image
+
+---
+
+## Design System Consistency
+
+### Color Palette
+```
+DIFF Mode:   from-orange-500 to-pink-500
+WRONG Mode:  from-pink-500 to-rose-500
+LOGIC Mode:  from-blue-500 to-purple-500
+
+Primary CTA: from-orange-500 to-pink-500
+Success:     bg-green-50 text-green-700
+Error:       bg-red-50 text-red-700
+Info:        bg-blue-50 text-blue-700
+```
+
+### Glass-Morphism
+```css
+bg-white/80 backdrop-blur-md border-white/20 shadow-lg
+```
+
+Applied to all dashboard cards for visual consistency.
+
+### Responsive Layout
+- **Mobile:** Single column, full width
+- **Tablet (md:):** Sidebar appears
+- **Desktop (lg:):** Two-column layout (game area + 384px sidebar)
+
+---
+
+## API Integration
+
+### Dependencies Added
+```json
+{
+  "@google/genai": "^1.33.0"
+}
+```
+
+### Environment Variables Used
+```env
+GEMINI_API_KEY=AIzaSy... (already configured)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_... (existing)
+CLERK_SECRET_KEY=sk_test_... (existing)
+```
+
+### API Route Pattern
+All routes follow consistent structure:
+1. Clerk authentication check
+2. Request parsing
+3. Gemini API call
+4. Response processing
+5. Error handling
+
+---
+
+## User Flow
+
+### Navigation
+1. Logged-in user clicks "Welcome {username}!" button in hero section
+2. Navigates to `/dashboard`
+3. Selects game mode (DIFF/WRONG/LOGIC)
+4. Optional: Enters subject/topic (or uses random theme)
+5. Clicks "Generate Game"
+6. Plays game with 15-second timer
+7. Submits guesses for verification
+8. Views results on timeout or completion
+9. Clicks "Play Again" or home icon to navigate back
+
+### Game Flow
+```
+IDLE → LOADING → ACTIVE GAME → GAME OVER → SHOW RESULTS → RESET → IDLE
+```
+
+---
+
+## Testing Checklist
+
+**Route Protection:**
+- [x] Unauthenticated users redirected to sign-in
+- [x] Authenticated users can access dashboard
+- [x] Welcome button navigates correctly
+- [x] Home icon returns to landing page
+
+**Game Mechanics:**
+- [x] All 3 game modes generate correctly
+- [x] Timer counts down properly
+- [x] Scoring works (+1/+2/+10)
+- [x] Auto-reveal on timeout
+- [x] Duplicate detection functional
+
+**Advanced Features:**
+- [x] Voice input works in both fields
+- [x] Zoom/pan controls functional
+- [x] Bounding boxes appear correctly
+- [x] Results panel displays properly
+
+**Responsive Design:**
+- [x] Mobile single-column layout
+- [x] Desktop two-column layout
+- [x] All controls accessible
+- [x] Images scale appropriately
+
+---
+
+## Session Statistics
+
+**Files Created:** 18
+- 8 API routes
+- 7 Dashboard components
+- 2 Utility files
+- 1 Dashboard layout
+
+**Files Modified:** 1 (hero-section.tsx)
+
+**Total Lines of Code:** ~2,500
+
+**Implementation Time:** ~2 hours
+
+---
+
+## Known Issues & Future Enhancements
+
+### Current Limitations
+- No score persistence (resets on refresh)
+- Fixed 15-second timer duration
+- Limited random themes (10 total)
+- No hint system
+- Single-player only
+
+### Planned Enhancements
+- [ ] Add database for score persistence
+- [ ] Implement difficulty levels
+- [ ] Create user-configurable timer
+- [ ] Add progressive hint system
+- [ ] Build leaderboard
+- [ ] Add achievement badges
+- [ ] Implement multiplayer mode
+- [ ] Add sound effects
+- [ ] Create tutorial walkthrough
+
+---
+
+## Developer Notes
+
+### Running the Dashboard
+```bash
+npm run dev
+# Navigate to localhost:3000
+# Sign in, click Welcome button
+# Dashboard loads at /dashboard
+```
+
+### Adding New Game Mode
+1. Update `GameMode` type in types.ts
+2. Create 3 API routes (generate, check, get-results)
+3. Add mode card to GameModeSelector
+4. Update scoring logic in dashboard page
+
+### Debugging
+- API errors: Check terminal for "Gemini API Error"
+- Client errors: Check browser console
+- Auth issues: Verify .env and Clerk dashboard
+
+---
+
+## Related Documentation
+
+- **Detailed Documentation:** See `dashboard.md` for complete implementation details
+- **Plan File:** `C:\Users\ES\.claude\plans\mighty-tumbling-walrus.md`
+- **Session 1:** Animated Navbar
+- **Session 2:** Hero Section with Video
+- **Session 3:** Clerk Authentication
+
+---
+
+**End of Session 4 Documentation**
+*Last Updated: December 25, 2025*

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SignedIn, useUser } from "@clerk/nextjs";
@@ -161,9 +162,11 @@ export default function HeroSection() {
 
           {/* Welcome Button - Only shown when user is logged in */}
           <SignedIn>
-            <Button className="bg-linear-to-r from-orange-500 via-pink-500 to-rose-500 hover:from-orange-600 hover:via-pink-600 hover:to-rose-600 text-white font-semibold text-lg px-8 py-6 rounded-full shadow-2xl shadow-orange-500/50 hover:shadow-orange-500/70 hover:scale-105 transition-all duration-300 animate-pulse">
-              Welcome {user?.username || user?.firstName || 'User'}!
-            </Button>
+            <Link href="/dashboard">
+              <Button className="bg-linear-to-r from-orange-500 via-pink-500 to-rose-500 hover:from-orange-600 hover:via-pink-600 hover:to-rose-600 text-white font-semibold text-lg px-8 py-6 rounded-full shadow-2xl shadow-orange-500/50 hover:shadow-orange-500/70 hover:scale-105 transition-all duration-300 animate-pulse">
+                Welcome {user?.username || user?.firstName || 'User'}!
+              </Button>
+            </Link>
           </SignedIn>
         </div>
       </div>

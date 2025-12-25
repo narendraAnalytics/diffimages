@@ -7,8 +7,8 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 // Using gemini-3-flash-preview for general vision tasks
 const VISION_MODEL = 'gemini-3-flash-preview';
-// Using gemini-3-pro-preview for complex reasoning (IQ/Logic)
-const LOGIC_MODEL = 'gemini-3-pro-preview';
+// Using gemini-3-flash-preview for complex reasoning (IQ/Logic)
+const LOGIC_MODEL = 'gemini-3-flash-preview';
 
 export interface Difference {
   id: number;
