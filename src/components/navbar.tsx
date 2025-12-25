@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tooltip } from "@/components/ui/tooltip-custom";
 import {
@@ -18,6 +19,7 @@ import {
   Info,
   Menu,
 } from "lucide-react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   const [isScrollingDown, setIsScrollingDown] = useState(false);
@@ -163,17 +165,26 @@ export default function Navbar() {
           })}
         </div>
 
-        {/* CTA Buttons - Desktop */}
+        {/* CTA Button - Desktop */}
         <div className="hidden md:flex items-center gap-3">
-          <Button
-            variant="outline"
-            className="border-gray-300 bg-white/10 hover:bg-white/20 backdrop-blur-sm hover:scale-105 transition-all duration-300"
-          >
-            Login
-          </Button>
-          <Button className="bg-linear-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-semibold shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/50 hover:scale-105 transition-all duration-300">
-            Get Started
-          </Button>
+          <SignedOut>
+            <Link href="/sign-in">
+              <Button className="bg-linear-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white font-semibold shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/50 hover:scale-105 transition-all duration-300">
+                Get Started
+              </Button>
+            </Link>
+          </SignedOut>
+
+          <SignedIn>
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-10 h-10"
+                }
+              }}
+              afterSignOutUrl="/"
+            />
+          </SignedIn>
         </div>
 
         {/* Mobile Menu */}
@@ -216,10 +227,27 @@ export default function Navbar() {
                 </div>
 
                 <div className="flex flex-col gap-3 mt-6 pt-6 border-t border-white/20">
-                  <Button variant="outline">Login</Button>
-                  <Button className="bg-linear-to-r from-orange-500 to-pink-500">
-                    Get Started
-                  </Button>
+                  <SignedOut>
+                    <Link href="/sign-in">
+                      <Button className="bg-linear-to-r from-orange-500 to-pink-500 w-full">
+                        Get Started
+                      </Button>
+                    </Link>
+                  </SignedOut>
+
+                  <SignedIn>
+                    <div className="flex items-center justify-between p-4 bg-white/20 rounded-lg">
+                      <span className="text-sm font-medium text-gray-800">Your Account</span>
+                      <UserButton
+                        appearance={{
+                          elements: {
+                            avatarBox: "w-10 h-10"
+                          }
+                        }}
+                        afterSignOutUrl="/"
+                      />
+                    </div>
+                  </SignedIn>
                 </div>
               </nav>
             </SheetContent>
