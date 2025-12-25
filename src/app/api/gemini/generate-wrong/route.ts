@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { auth } from '@clerk/nextjs/server';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.API_KEY });
 const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 export async function POST(request: NextRequest) {
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     let imageBase64 = '';
     for (const part of response.candidates?.[0]?.content?.parts || []) {
       if (part.inlineData) {
-        imageBase64 = part.inlineData.data;
+        imageBase64 = part.inlineData.data || '';
         break;
       }
     }
