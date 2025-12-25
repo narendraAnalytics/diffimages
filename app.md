@@ -1378,3 +1378,1032 @@ public/
 
 **End of Session 2 Documentation**
 *Last Updated: December 24, 2025*
+
+---
+
+---
+
+# Session 3: Clerk Authentication & Video Playback Fixes
+
+**Date:** December 25, 2025
+**Session Focus:** Video Playback Fix, Clerk Authentication Integration, Navbar Simplification, Personalized Welcome Experience
+
+---
+
+## Session Summary
+
+In this session, we accomplished four major improvements to the DiffGen landing page: fixed a critical video playback bug, simplified the navbar UI, integrated a complete Clerk authentication system, and added a personalized welcome experience for logged-in users. The primary focus was on implementing Clerk authentication with username + email verification, creating a seamless sign-in/sign-up flow, and enhancing the user experience with conditional rendering based on authentication state.
+
+### What Was Accomplished
+- ✅ Fixed video transition playback issue (videos were stuck on first frame)
+- ✅ Removed "Login" button from navbar for cleaner single-CTA design
+- ✅ Integrated Clerk authentication system with middleware protection
+- ✅ Created authentication middleware (`proxy.ts`)
+- ✅ Built custom sign-in page with Clerk component
+- ✅ Updated navbar with authentication-aware UI components
+- ✅ Configured environment variables for auth redirects
+- ✅ Added personalized welcome button in hero section for logged-in users
+
+---
+
+## Project Context Update
+
+### Current State
+- **Framework:** Next.js 16.1.1 with React 19.2.3
+- **Authentication:** Clerk with username + email verification
+- **Styling:** Tailwind CSS 4 with custom gradient system
+- **UI Components:** Shadcn UI component library
+- **Icons:** Lucide React (v0.562.0)
+- **Status:** Landing page with authentication, video playback, and personalized greetings
+
+---
+
+## Implementation Details
+
+### 1. Video Playback Fix
+
+#### Problem Identified
+**Symptom:** Videos were stuck on the first frame and not playing automatically
+**Root Cause:** Missing initial `.play()` call when component mounts
+**Impact:** Dual-video crossfade system was non-functional, users saw frozen video
+
+#### Solution Implemented
+
+**File:** `src/components/hero-section.tsx`
+
+**Code Added** (lines 25-32):
+```typescript
+// Start playing the active video when component mounts
+useEffect(() => {
+  if (activeVideoRef.current) {
+    activeVideoRef.current.play().catch((error) => {
+      console.log("Initial autoplay prevented:", error);
+    });
+  }
+}, []); // Empty dependency array - run once on mount
+```
+
+**How It Works:**
+- `useEffect` with empty dependency array runs once on component mount
+- Checks if `activeVideoRef.current` exists (video element is rendered)
+- Calls `.play()` on the video element to start playback
+- `.catch()` handles browser autoplay restrictions gracefully
+- Triggers the entire video transition cycle
+
+**Result:**
+- Videos now autoplay immediately on page load
+- Smooth crossfade transitions between all 3 videos
+- Continuous cycling: video2.mp4 → video3.mp4 → video1.mp4 → repeat
+
+---
+
+### 2. Navbar Simplification
+
+#### Change Made
+**File:** `src/components/navbar.tsx`
+
+**Removed:**
+- "Login" button (outline style)
+- Dual-CTA design
+
+**Kept:**
+- "Get Started" button (gradient style)
+- Single prominent call-to-action
+
+**Reason:**
+- Cleaner, more focused design
+- Single action reduces decision fatigue
+- "Get Started" handles both sign-up and sign-in flows
+- Login functionality now accessed through main CTA
+
+**Code Change:**
+```typescript
+// Before: Two buttons (Login + Get Started)
+<Button variant="outline">Login</Button>
+<Button>Get Started</Button>
+
+// After: One button (Get Started only)
+<Button>Get Started</Button>
+```
+
+---
+
+### 3. Clerk Authentication Integration
+
+This was the major feature of the session, involving multiple components and files.
+
+#### 3.1 Middleware Setup
+
+**File Created:** `proxy.ts` (root level)
+
+**Purpose:**
+- Protect routes that require authentication
+- Make sign-in/sign-up routes public
+- Automatically redirect unauthenticated users
+
+**Code:**
+```typescript
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+
+// Define public routes that don't require authentication
+const isPublicRoute = createRouteMatcher([
+  '/',               // Landing page is public
+  '/sign-in(.*)',    // Sign-in page and sub-routes
+  '/sign-up(.*)',    // Sign-up page and sub-routes (if separate)
+])
+
+export default clerkMiddleware(async (auth, req) => {
+  // Only protect routes that are NOT public
+  if (!isPublicRoute(req)) {
+    await auth.protect()
+  }
+})
+
+export const config = {
+  matcher: [
+    // Skip Next.js internals and all static files
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
+  ],
+}
+```
+
+**Key Points:**
+- Uses latest `clerkMiddleware()` (NOT deprecated `authMiddleware()`)
+- Landing page (`/`) is public for unauthenticated access
+- Sign-in and sign-up routes are public
+- All other routes protected by default
+- Matcher pattern excludes Next.js internals and static files
+
+---
+
+#### 3.2 ClerkProvider Wrapper
+
+**File Modified:** `src/app/layout.tsx`
+
+**Changes:**
+1. Added import: `import { ClerkProvider } from "@clerk/nextjs"`
+2. Wrapped entire app with `<ClerkProvider>`
+3. Updated metadata (title, description)
+
+**Code:**
+```typescript
+import { ClerkProvider } from "@clerk/nextjs";
+
+export const metadata: Metadata = {
+  title: "DiffGen - AI Film Production",
+  description: "AI-powered film production technology",
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <ClerkProvider>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
+  );
+}
+```
+
+**Purpose:**
+- Makes Clerk hooks and components available throughout the app
+- Reads configuration from environment variables
+- Manages authentication state globally
+- Required for all Clerk features to function
+
+---
+
+#### 3.3 Sign-In Page
+
+**File Created:** `src/app/sign-in/[[...sign-in]]/page.tsx`
+
+**Directory Structure:**
+```
+src/
+  app/
+    sign-in/
+      [[...sign-in]]/
+        page.tsx
+```
+
+**Code:**
+```typescript
+import { SignIn } from '@clerk/nextjs'
+
+export default function SignInPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-yellow-50 to-pink-50">
+      <SignIn
+        appearance={{
+          elements: {
+            rootBox: "mx-auto",
+            card: "shadow-2xl"
+          }
+        }}
+      />
+    </div>
+  )
+}
+```
+
+**Features:**
+- Uses Clerk's prebuilt `<SignIn />` component
+- Handles both sign-in and sign-up in one flow
+- **Optional catch-all route** `[[...sign-in]]` for multi-step flows
+- Matches landing page gradient background
+- Custom appearance for shadow and centering
+- Automatically enforces Clerk dashboard settings:
+  - Username required
+  - Email required
+  - Email verification with code
+  - Sign-in with username OR email
+
+**Why `[[...sign-in]]` syntax?**
+- Next.js optional catch-all route
+- Handles `/sign-in`, `/sign-in/factor-one`, `/sign-in/sso-callback`, etc.
+- Required for Clerk's multi-step authentication (email verification, MFA)
+
+---
+
+#### 3.4 Navbar Authentication UI
+
+**File Modified:** `src/components/navbar.tsx`
+
+**Imports Added:**
+```typescript
+import Link from "next/link";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+```
+
+**Desktop CTA Section** (updated):
+```typescript
+{/* CTA Button - Desktop */}
+<div className="hidden md:flex items-center gap-3">
+  <SignedOut>
+    <Link href="/sign-in">
+      <Button className="bg-linear-to-r from-orange-500 to-pink-500...">
+        Get Started
+      </Button>
+    </Link>
+  </SignedOut>
+
+  <SignedIn>
+    <UserButton
+      appearance={{
+        elements: {
+          avatarBox: "w-10 h-10"
+        }
+      }}
+      afterSignOutUrl="/"
+    />
+  </SignedIn>
+</div>
+```
+
+**Mobile Menu CTA Section** (updated):
+```typescript
+<div className="flex flex-col gap-3 mt-6 pt-6 border-t border-white/20">
+  <SignedOut>
+    <Link href="/sign-in">
+      <Button className="bg-linear-to-r from-orange-500 to-pink-500 w-full">
+        Get Started
+      </Button>
+    </Link>
+  </SignedOut>
+
+  <SignedIn>
+    <div className="flex items-center justify-between p-4 bg-white/20 rounded-lg">
+      <span className="text-sm font-medium text-gray-800">Your Account</span>
+      <UserButton
+        appearance={{
+          elements: {
+            avatarBox: "w-10 h-10"
+          }
+        }}
+        afterSignOutUrl="/"
+      />
+    </div>
+  </SignedIn>
+</div>
+```
+
+**Components Used:**
+- `<SignedOut>`: Only renders children when user is NOT authenticated
+- `<SignedIn>`: Only renders children when user IS authenticated
+- `<Link>`: Next.js navigation to sign-in page
+- `<UserButton>`: Clerk's prebuilt profile dropdown with:
+  - User avatar
+  - Manage account link
+  - Sign out button
+- `afterSignOutUrl="/"`: Redirects to landing page after sign-out
+
+---
+
+#### 3.5 Environment Variables
+
+**File Modified:** `.env`
+
+**Variables Added:**
+```env
+# Clerk Sign-In/Sign-Up Configuration
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
+NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
+```
+
+**Existing Variables:**
+```env
+GEMINI_API_KEY=
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+```
+
+**Purpose:**
+- `NEXT_PUBLIC_CLERK_SIGN_IN_URL`: Tells Clerk where sign-in page is hosted
+- `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL`: Where to redirect after sign-in (landing page)
+- `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL`: Where to redirect after sign-up (landing page)
+- `NEXT_PUBLIC_` prefix makes variables available in client-side code
+
+---
+
+### 4. Welcome Button in Hero Section
+
+**File Modified:** `src/components/hero-section.tsx`
+
+**Imports Added:**
+```typescript
+import { SignedIn, useUser } from "@clerk/nextjs";
+```
+
+**Hook Added** (line 15-16):
+```typescript
+// Get current user data
+const { user } = useUser();
+```
+
+**Button Added in Hero Content** (lines 162-167):
+```typescript
+{/* Welcome Button - Only shown when user is logged in */}
+<SignedIn>
+  <Button className="bg-gradient-to-r from-orange-500 via-pink-500 to-rose-500 hover:from-orange-600 hover:via-pink-600 hover:to-rose-600 text-white font-semibold text-lg px-8 py-6 rounded-full shadow-2xl shadow-orange-500/50 hover:shadow-orange-500/70 hover:scale-105 transition-all duration-300 animate-pulse">
+    Welcome {user?.username || user?.firstName || 'User'}!
+  </Button>
+</SignedIn>
+```
+
+**Features:**
+- **Conditional Rendering**: Only visible when user is authenticated
+- **Personalization**: Displays user's actual username
+- **Bright Gradient**: Orange → Pink → Rose (vibrant, eye-catching)
+- **White Text**: High contrast, readable against gradient
+- **Pulse Animation**: Gently draws attention
+- **Hover Effects**:
+  - Gradient darkens (600 shades)
+  - Scales up 5% (`hover:scale-105`)
+  - Shadow intensifies (50% → 70% opacity)
+  - Smooth 300ms transitions
+
+**Username Fallback Logic:**
+```typescript
+{user?.username || user?.firstName || 'User'}
+```
+1. First: Try `user.username` (required by Clerk settings)
+2. Second: Try `user.firstName` (if username missing)
+3. Third: Use `'User'` as safety fallback
+
+**Positioning:**
+- Located below subtitle text in hero section
+- Left-aligned with content container
+- Generous padding: 32px horizontal, 24px vertical
+- Fully rounded pill shape (`rounded-full`)
+
+---
+
+## Authentication Flow
+
+### Complete User Journey
+
+**For Unauthenticated Users:**
+1. User lands on `/` (landing page)
+2. Sees "Get Started" button in navbar
+3. Clicks "Get Started"
+4. Navigates to `/sign-in` page
+5. Sees Clerk sign-in component with "Don't have an account? Sign up" link
+6. Clicks "Sign up"
+7. Enters required information:
+   - Username (required per Clerk dashboard settings)
+   - Email (required per Clerk dashboard settings)
+   - Password
+8. Email verification code sent to email address
+9. User enters 6-digit verification code
+10. Email verified successfully
+11. Redirects to `/` (landing page)
+12. Now sees:
+    - `<UserButton>` (avatar/profile) in navbar instead of "Get Started"
+    - Welcome button in hero section: "Welcome {username}!"
+
+**For Authenticated Users:**
+1. User lands on `/` (landing page)
+2. Sees `<UserButton>` (avatar) in navbar
+3. Sees "Welcome {username}!" button in hero section
+4. Can click `<UserButton>` to access:
+   - View profile
+   - Manage account
+   - Sign out
+5. Clicking "Sign out" redirects to `/` with "Get Started" button visible again
+
+**For Protected Routes** (future feature):
+1. User tries to access `/dashboard` (or any protected route)
+2. Middleware intercepts request
+3. If authenticated: Page loads normally
+4. If not authenticated: Redirected to `/sign-in`
+5. After sign-in: Redirected back to originally requested route
+
+---
+
+## Files Created/Modified
+
+### New Files (2)
+| File | Description | Lines of Code |
+|------|-------------|---------------|
+| `proxy.ts` | Clerk middleware for route protection | ~25 |
+| `src/app/sign-in/[[...sign-in]]/page.tsx` | Sign-in/sign-up page with Clerk component | ~15 |
+
+### Modified Files (4)
+| File | Changes | Key Modifications |
+|------|---------|-------------------|
+| `src/app/layout.tsx` | Added ClerkProvider, updated metadata | Wrapped app with `<ClerkProvider>`, updated title/description |
+| `src/components/navbar.tsx` | Added auth-aware UI, removed Login button | Added `SignedIn/SignedOut/UserButton`, connected "Get Started" to `/sign-in` |
+| `src/components/hero-section.tsx` | Fixed video playback, added welcome button | Added `useEffect` for video play, added `useUser` hook, added personalized welcome button |
+| `.env` | Added Clerk redirect URLs | Added `NEXT_PUBLIC_CLERK_SIGN_IN_URL`, fallback redirect URLs |
+
+**Total Changes:**
+- **2 new files**
+- **4 modified files**
+- **~250 lines of new code**
+- **No breaking changes to existing functionality**
+
+---
+
+## Key Features Implemented
+
+### Authentication System
+**Username + Email Sign-Up:**
+- Clerk dashboard configured to require both username and email
+- Email verification with 6-digit code sent to user
+- Password requirements enforced by Clerk
+
+**Secure Route Protection:**
+- Middleware (`proxy.ts`) protects all routes by default
+- Public routes explicitly defined: `/`, `/sign-in`, `/sign-up`
+- Automatic redirect to sign-in page for unauthenticated users
+- Session management handled by Clerk
+
+**User Profile Management:**
+- `<UserButton>` component provides profile dropdown
+- "Manage account" link for user settings
+- "Sign out" button with automatic redirect
+- Avatar display based on user data
+
+### Personalization
+**Conditional UI:**
+- Different navbar for authenticated vs. unauthenticated users
+- Welcome button only visible to logged-in users
+- Seamless state transitions based on auth status
+
+**Personalized Greeting:**
+- Displays actual username in welcome button
+- Fallback to first name if username unavailable
+- Generic "User" fallback for edge cases
+
+### User Experience
+**Single CTA Design:**
+- "Get Started" button for unauthenticated users
+- `<UserButton>` profile dropdown for authenticated users
+- Cleaner, less cluttered navbar
+
+**Automatic Redirects:**
+- After sign-in: Redirect to `/` (landing page)
+- After sign-up: Redirect to `/` (landing page)
+- After sign-out: Redirect to `/` (landing page)
+- Seamless navigation flow
+
+---
+
+## Code Patterns Used
+
+### Clerk Authentication Hooks
+
+**useUser Hook:**
+```typescript
+const { user } = useUser();
+
+// Access user data:
+user?.username    // User's username
+user?.firstName   // User's first name
+user?.lastName    // User's last name
+user?.email       // User's email
+```
+
+### Conditional Rendering
+
+**Client-Side Components:**
+```typescript
+<SignedOut>
+  {/* Only rendered when user is NOT logged in */}
+  <Link href="/sign-in">
+    <Button>Get Started</Button>
+  </Link>
+</SignedOut>
+
+<SignedIn>
+  {/* Only rendered when user IS logged in */}
+  <UserButton afterSignOutUrl="/" />
+</SignedIn>
+```
+
+### Middleware Pattern
+
+**Route Protection:**
+```typescript
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+
+const isPublicRoute = createRouteMatcher(['/'])
+
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect()  // Protect non-public routes
+  }
+})
+```
+
+### Video Autoplay Pattern
+
+**useEffect for Initial Play:**
+```typescript
+useEffect(() => {
+  if (videoRef.current) {
+    videoRef.current.play().catch((error) => {
+      console.log("Autoplay prevented:", error);
+    });
+  }
+}, []); // Run once on mount
+```
+
+---
+
+## Technical Implementation
+
+### Clerk Configuration
+
+**Dashboard Settings:**
+- **User & Authentication → Email, Phone, Username:**
+  - ✅ Sign-up with username: Enabled
+  - ✅ Require username: Enabled
+  - ✅ Sign-in with username: Enabled
+  - ✅ Require email address: Enabled
+  - ✅ Verify at sign-up: Enabled (Email verification code)
+  - ✅ Sign-in with email: Enabled
+  - ✅ Email verification code: Enabled
+
+**Route Protection:**
+- Middleware: `proxy.ts` at root level (Next.js 16+)
+- Public routes: `/`, `/sign-in(.*)`, `/sign-up(.*)`
+- Protected routes: Everything else (automatic protection)
+- Redirect behavior: Unauthenticated users → `/sign-in`
+
+**Session Management:**
+- Handled automatically by Clerk
+- Secure cookies with HttpOnly flag
+- Token refresh handled by ClerkProvider
+- Session persistence across page reloads
+
+### Video Playback Fix
+
+**Problem:**
+- Dual-video crossfade system requires first video to play
+- No autoplay trigger meant videos never started
+- Event handlers (`onEnded`) never fired
+
+**Solution:**
+- `useEffect` with empty dependency array
+- Runs once on component mount
+- Calls `.play()` on active video ref
+- Error handling for browser autoplay restrictions
+- Kicks off entire video cycle
+
+**Technical Details:**
+```typescript
+useEffect(() => {
+  if (activeVideoRef.current) {
+    activeVideoRef.current.play().catch((error) => {
+      console.log("Initial autoplay prevented:", error);
+    });
+  }
+}, []);  // Empty array = run once on mount
+```
+
+### Welcome Button Implementation
+
+**Client Component Pattern:**
+```typescript
+"use client";  // Required for Clerk hooks
+
+import { useUser } from "@clerk/nextjs";
+
+const { user } = useUser();  // Get user data
+```
+
+**Conditional Rendering:**
+```typescript
+<SignedIn>
+  {/* Only renders when authenticated */}
+  <Button>Welcome {user?.username}!</Button>
+</SignedIn>
+```
+
+**Styling:**
+- Three-color gradient: `from-orange-500 via-pink-500 to-rose-500`
+- White text for high contrast: `text-white`
+- Generous padding: `px-8 py-6` (32px x 24px)
+- Fully rounded: `rounded-full`
+- Large shadow with glow: `shadow-2xl shadow-orange-500/50`
+- Pulse animation: `animate-pulse`
+- Hover effects: `hover:scale-105 hover:shadow-orange-500/70`
+
+---
+
+## Dependencies & Components
+
+### Clerk Components Used
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| `<ClerkProvider>` | Root authentication wrapper | `app/layout.tsx` |
+| `<SignIn />` | Sign-in/sign-up form | `app/sign-in/[[...sign-in]]/page.tsx` |
+| `<SignedIn>` | Conditional wrapper for authenticated state | `navbar.tsx`, `hero-section.tsx` |
+| `<SignedOut>` | Conditional wrapper for unauthenticated state | `navbar.tsx` |
+| `<UserButton>` | Profile dropdown with avatar | `navbar.tsx` |
+| `useUser()` | Hook to access user data | `hero-section.tsx` |
+| `clerkMiddleware()` | Route protection middleware | `proxy.ts` |
+| `createRouteMatcher()` | Define public routes | `proxy.ts` |
+
+### Existing Components
+
+| Component | Source | Usage |
+|-----------|--------|-------|
+| `<Button>` | Shadcn UI | Get Started button, Welcome button |
+| `<Link>` | Next.js | Navigation to sign-in page |
+| `<Sheet>`, `<SheetContent>`, `<SheetTrigger>` | Shadcn UI | Mobile menu |
+| `<Tooltip>` | Custom component | Navbar icon tooltips |
+| Lucide Icons | `lucide-react` | UI icons (Home, Menu, Volume, etc.) |
+
+### Next.js Features
+
+| Feature | Usage |
+|---------|-------|
+| App Router | Route structure (`app/` directory) |
+| Optional Catch-All Routes | `[[...sign-in]]` for multi-step auth |
+| Middleware | `proxy.ts` for route protection |
+| Server Components | Default for layouts and pages |
+| Client Components | `"use client"` for hooks and interactivity |
+| Environment Variables | `.env` for Clerk configuration |
+
+---
+
+## Bugs Fixed
+
+### Issue 1: Videos Not Playing
+
+**Symptom:**
+- Videos appeared on screen but frozen on first frame
+- No transitions between videos
+- Sound toggle had no effect (video wasn't playing)
+- Dual-video crossfade system non-functional
+
+**Root Cause:**
+- Missing initial `.play()` call when component mounts
+- Video elements rendered but never started playback
+- `onEnded` event handlers never fired (videos never ended)
+
+**Solution:**
+```typescript
+useEffect(() => {
+  if (activeVideoRef.current) {
+    activeVideoRef.current.play().catch((error) => {
+      console.log("Initial autoplay prevented:", error);
+    });
+  }
+}, []);
+```
+
+**Result:**
+- Videos now autoplay immediately on page load
+- Smooth crossfade transitions work correctly
+- Continuous cycling through all 3 videos
+- Sound toggle functional (videos are playing)
+
+**Testing:**
+- ✅ Videos autoplay on mount
+- ✅ First video (video2.mp4) starts immediately
+- ✅ Transitions to second video (video3.mp4) after completion
+- ✅ Transitions to third video (video1.mp4) after completion
+- ✅ Loops back to first video (continuous cycle)
+- ✅ Sound toggle works (mute/unmute)
+
+---
+
+## Testing Completed
+
+### Authentication Flow Testing
+
+**Sign-Up Flow:**
+- ✅ Navigate to `/sign-in` page via "Get Started" button
+- ✅ Click "Don't have an account? Sign up"
+- ✅ Enter username (required field works)
+- ✅ Enter email (required field works)
+- ✅ Enter password (strength validation works)
+- ✅ Email verification code sent successfully
+- ✅ Enter 6-digit code
+- ✅ Email verified successfully
+- ✅ Redirect to `/` (landing page)
+- ✅ UserButton appears in navbar
+- ✅ "Get Started" button hidden
+
+**Sign-In Flow:**
+- ✅ Click "Get Started" when logged out
+- ✅ Enter username OR email (both work)
+- ✅ Enter password
+- ✅ Sign-in successful
+- ✅ Redirect to `/` (landing page)
+- ✅ UserButton appears
+
+**Sign-Out Flow:**
+- ✅ Click UserButton in navbar
+- ✅ Click "Sign out"
+- ✅ Redirect to `/` (landing page)
+- ✅ "Get Started" button reappears
+- ✅ UserButton hidden
+- ✅ Welcome button hidden
+
+**Profile Access:**
+- ✅ Click UserButton
+- ✅ See user avatar
+- ✅ See "Manage account" link
+- ✅ See "Sign out" option
+- ✅ Dropdown closes on outside click
+
+### Welcome Button Testing
+
+**Unauthenticated State:**
+- ✅ Visit landing page while logged out
+- ✅ Welcome button NOT visible
+- ✅ Subtitle text still visible
+- ✅ Videos play correctly
+- ✅ Sound toggle works
+
+**Authenticated State:**
+- ✅ Sign in via "Get Started"
+- ✅ Return to landing page
+- ✅ Welcome button IS visible
+- ✅ Button shows correct username
+- ✅ Username format: "Welcome {username}!"
+- ✅ Gradient styling correct (orange → pink → rose)
+- ✅ Text color is white (not black)
+- ✅ Pulse animation active
+
+**Button Interactions:**
+- ✅ Hover: Gradient darkens
+- ✅ Hover: Button scales up 5%
+- ✅ Hover: Shadow intensifies
+- ✅ Smooth 300ms transitions
+- ✅ Cursor changes to pointer
+
+**Responsive Design:**
+- ✅ Desktop: Button fits nicely below subtitle
+- ✅ Tablet: Button maintains proportions
+- ✅ Mobile: Button doesn't overflow
+- ✅ Mobile: Text wraps gracefully if needed
+
+### Video Playback Testing
+
+**Autoplay:**
+- ✅ Videos start automatically on page load
+- ✅ First video (video2.mp4) plays immediately
+- ✅ No user interaction required
+
+**Transitions:**
+- ✅ Smooth crossfade from video2.mp4 to video3.mp4
+- ✅ Smooth crossfade from video3.mp4 to video1.mp4
+- ✅ Smooth crossfade from video1.mp4 to video2.mp4
+- ✅ No white flashes during transitions
+- ✅ 1-second opacity transition duration
+
+**Cycling:**
+- ✅ Continuous loop through all 3 videos
+- ✅ Cycle pattern: video2 → video3 → video1 → video2
+- ✅ No interruptions or pauses
+
+**Sound:**
+- ✅ Videos start muted (browser autoplay requirement)
+- ✅ Sound toggle button functional
+- ✅ "Turn on sound" indicator visible initially
+- ✅ Indicator hides after first toggle
+- ✅ Mute/unmute icon changes correctly
+
+### Navbar Testing
+
+**Desktop View:**
+- ✅ Logged out: "Get Started" button visible
+- ✅ Logged in: UserButton visible, "Get Started" hidden
+- ✅ All navigation icons functional
+- ✅ Tooltips appear on icon hover
+- ✅ Navbar transparent at top of page
+- ✅ Navbar solid background after scrolling 100px
+- ✅ Navbar hides on scroll down
+- ✅ Navbar shows on scroll up
+
+**Mobile View:**
+- ✅ Hamburger menu opens correctly
+- ✅ Logged out: "Get Started" in mobile menu
+- ✅ Logged in: "Your Account" card with UserButton
+- ✅ Navigation items functional
+- ✅ Mobile menu closes on navigation
+- ✅ Sparkles decorative icon visible
+
+---
+
+## Next Steps
+
+### Authentication Enhancements
+- [ ] **User Profile Page** - Create dedicated profile page with:
+  - User information display
+  - Avatar upload
+  - Username/email editing
+  - Password change
+  - Account deletion
+- [ ] **Protected Dashboard** - Build user dashboard with:
+  - User statistics
+  - Activity history
+  - Personalized content
+- [ ] **Social Sign-In** - Enable OAuth providers:
+  - Google authentication
+  - GitHub authentication
+  - Configure in Clerk dashboard
+- [ ] **User Settings Page** - Preferences and configuration:
+  - Email notifications
+  - Theme preferences
+  - Privacy settings
+
+### Content Development
+- [ ] **"How It Works" Section** - Explain DiffGen features:
+  - AI-powered film production
+  - Step-by-step process
+  - Use cases and examples
+- [ ] **"Features" Showcase** - Highlight capabilities:
+  - DIFF Mode - Spot differences
+  - WRONG Mode - Find errors
+  - LOGIC Mode - Solve puzzles
+- [ ] **"Pricing" Page** - Subscription tiers:
+  - Free tier
+  - Pro tier
+  - Enterprise tier
+  - Feature comparison
+- [ ] **"About" Section** - Company information:
+  - Mission and vision
+  - Team members
+  - Technology stack
+
+### UI/UX Improvements
+- [ ] **Loading States** - Add loading indicators for:
+  - Video loading
+  - Authentication operations
+  - Page transitions
+- [ ] **Error Boundaries** - Implement error handling:
+  - React error boundaries
+  - Fallback UI components
+  - Error reporting
+- [ ] **Smooth Scroll** - Add smooth scroll behavior:
+  - Anchor link navigation
+  - Scroll-to-section animation
+  - Active section highlighting
+
+### Performance Optimization
+- [ ] **Video Optimization** - Reduce file sizes:
+  - Compress video files
+  - Create multiple quality versions
+  - Implement adaptive streaming
+- [ ] **Image Optimization** - Optimize images:
+  - WebP format
+  - Responsive images
+  - Lazy loading
+- [ ] **Code Splitting** - Improve load times:
+  - Route-based splitting
+  - Component lazy loading
+  - Dynamic imports
+
+---
+
+## Session Checklist
+
+### Video Fixes
+- [x] Identified video playback issue
+- [x] Added useEffect hook for initial play
+- [x] Tested video autoplay
+- [x] Verified smooth transitions
+- [x] Confirmed continuous cycling
+- [x] Documented solution
+
+### Navbar Updates
+- [x] Removed "Login" button
+- [x] Updated desktop CTA section
+- [x] Updated mobile menu CTA section
+- [x] Added Clerk authentication components
+- [x] Implemented conditional rendering (SignedIn/SignedOut)
+- [x] Added UserButton for authenticated users
+- [x] Connected "Get Started" to sign-in page
+- [x] Tested all navbar states
+- [x] Verified mobile menu functionality
+
+### Clerk Integration
+- [x] Created `proxy.ts` middleware file
+- [x] Configured public routes matcher
+- [x] Implemented route protection logic
+- [x] Added ClerkProvider to app layout
+- [x] Updated metadata (title, description)
+- [x] Created sign-in page directory structure
+- [x] Built sign-in page with Clerk component
+- [x] Configured environment variables
+- [x] Added redirect URLs to .env
+- [x] Tested complete authentication flow
+- [x] Verified email verification works
+- [x] Tested sign-out functionality
+
+### Welcome Button
+- [x] Added Clerk imports to hero section
+- [x] Implemented useUser hook
+- [x] Created welcome button with gradient styling
+- [x] Added conditional rendering (SignedIn)
+- [x] Implemented username display logic
+- [x] Applied white text color
+- [x] Added pulse animation
+- [x] Implemented hover effects
+- [x] Tested with actual username
+- [x] Verified responsive design
+- [x] Confirmed button only shows when logged in
+
+### Documentation
+- [x] Documented all code changes
+- [x] Created detailed implementation notes
+- [x] Wrote testing checklists
+- [x] Updated plan files
+- [x] Recorded bugs fixed
+- [x] Listed next steps
+- [x] Added resources and references
+- [x] Created Session 3 documentation
+
+---
+
+## Resources & References
+
+### Technologies Used
+- **Clerk Authentication:** https://clerk.com/docs
+- **Next.js Documentation:** https://nextjs.org/docs
+- **Next.js App Router:** https://nextjs.org/docs/app
+- **Clerk + Next.js Guide:** https://clerk.com/docs/nextjs
+- **Clerk Middleware:** https://clerk.com/docs/reference/nextjs/clerk-middleware
+- **Tailwind CSS:** https://tailwindcss.com/docs
+- **Shadcn UI:** https://ui.shadcn.com
+- **Lucide Icons:** https://lucide.dev
+- **HTML5 Video API:** https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement
+
+### Clerk Dashboard Configuration
+**User & Authentication Settings:**
+- Sign-up with username: ✅ Enabled
+- Require username: ✅ Enabled
+- Sign-in with username: ✅ Enabled
+- Require email address: ✅ Enabled
+- Verify at sign-up: ✅ Enabled (Recommended)
+- Verification method: Email verification code
+- Sign-in with email: ✅ Enabled
+- Email verification code: ✅ Enabled
+
+### Design Patterns
+- **Conditional Rendering:** Authentication-based UI with Clerk components
+- **Middleware Pattern:** Route protection with `clerkMiddleware()`
+- **Custom Hooks:** `useUser()` for user data access
+- **Client Components:** `"use client"` for interactive features
+- **Gradient Styling:** Multi-color gradients for visual interest
+- **Glass Morphism:** Backdrop blur with semi-transparent backgrounds
+
+### Code References
+- **clerkinfo.md:** Complete Clerk integration guidelines
+- **app.md Sessions 1 & 2:** Previous session documentation
+- **Plan files:** Implementation plans for all features
+
+---
+
+**End of Session 3 Documentation**
+*Last Updated: December 25, 2025*
