@@ -63,7 +63,7 @@ export default function DashboardPage() {
   const [revealing, setRevealing] = useState(false);
   const [logicSolution, setLogicSolution] = useState<string | null>(null);
 
-  const hasContent = images || singleImage || logicGame;
+  const hasContent = !!(images || singleImage || logicGame);
 
   // Timer Logic
   useEffect(() => {
@@ -211,7 +211,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="pt-20 px-4 pb-8 max-w-7xl mx-auto">
+    <div className="pt-14 px-4 pb-8 max-w-7xl mx-auto">
       <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-120px)]">
         {/* Left: Game Area */}
         <div className="flex-1">

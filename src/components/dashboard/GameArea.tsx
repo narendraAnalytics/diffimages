@@ -98,9 +98,8 @@ export default function GameArea({
         </div>
       ) : (
         <>
-          {/* Image Display Area */}
           <div
-            className="flex-1 cursor-move touch-none bg-zinc-50 flex items-center justify-center relative overflow-hidden"
+            className="flex-1 cursor-move touch-none bg-zinc-50 flex items-start justify-center relative overflow-hidden pt-10"
             onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
             onMouseMove={(e) => handleMove(e.clientX, e.clientY)}
             onMouseUp={handleEnd}
