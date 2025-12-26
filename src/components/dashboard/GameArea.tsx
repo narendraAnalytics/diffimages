@@ -5,6 +5,7 @@ import { Brain, ArrowRight, RotateCcw, MessageSquare, Loader2, Maximize2, Minimi
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { GameMode, DiffGameData, LogicGameData, Difference } from '@/lib/gemini/types';
+import FallingPetals from './FallingPetals';
 
 interface GameAreaProps {
   gameMode: GameMode;
@@ -178,6 +179,8 @@ export default function GameArea({
 
   return (
     <>
+      <FallingPetals show={gameOver && !revealing} gameMode={gameMode} />
+
       <Card className="bg-white/80 backdrop-blur-md border-white/20 shadow-lg h-full min-h-[600px] flex flex-col overflow-hidden">
         {!hasContent ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">

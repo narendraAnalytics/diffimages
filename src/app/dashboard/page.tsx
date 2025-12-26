@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { GameMode, DiffGameData, LogicGameData, Difference } from '@/lib/gemini/types';
 import {
@@ -13,13 +13,15 @@ import {
   getDifferences,
   getErrors
 } from '@/lib/gemini/client';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import GameModeSelector from '@/components/dashboard/GameModeSelector';
 import GameArea from '@/components/dashboard/GameArea';
 import GameControls from '@/components/dashboard/GameControls';
 import GameTimer from '@/components/dashboard/GameTimer';
 import GameResponse from '@/components/dashboard/GameResponse';
+import { BeepGenerator } from '@/lib/audio/beepGenerator';
 
-const TIMER_DURATION = 15;
+const TIMER_DURATION = 75;
 
 const RANDOM_THEMES = [
   "A futuristic street market",
@@ -57,6 +59,7 @@ export default function DashboardPage() {
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [timerZone, setTimerZone] = useState<'green' | 'orange' | 'red'>('green');
 
   // Results
   const [differences, setDifferences] = useState<Difference[]>([]);
@@ -66,14 +69,46 @@ export default function DashboardPage() {
   // UI State
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
+  // Audio System
+  const beepGeneratorRef = useRef<BeepGenerator | null>(null);
+
   const hasContent = !!(images || singleImage || logicGame);
 
-  // Timer Logic
+  // Initialize Audio System
+  useEffect(() => {
+    beepGeneratorRef.current = new BeepGenerator();
+    return () => {
+      beepGeneratorRef.current?.destroy();
+    };
+  }, []);
+
+  const playBeeps = (count: number) => {
+    beepGeneratorRef.current?.playBeeps(count);
+  };
+
+  // Timer Logic with Sound
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (isTimerActive && timer > 0) {
       interval = setInterval(() => {
-        setTimer((t) => t - 1);
+        setTimer((t) => {
+          const newTime = t - 1;
+
+          // Zone transitions and sound triggers
+          if (newTime === 30) {
+            setTimerZone('orange');
+            playBeeps(2); // Enter orange zone: 2 beeps
+          } else if (newTime === 15) {
+            setTimerZone('red');
+            playBeeps(2); // Enter red zone: 2 beeps
+          } else if (newTime < 15 && newTime > 0) {
+            playBeeps(1); // Continuous beeping in red zone
+          } else if (newTime === 0) {
+            playBeeps(1); // Final beep
+          }
+
+          return newTime;
+        });
       }, 1000);
     } else if (isTimerActive && timer === 0) {
       handleTimeout();
@@ -118,6 +153,7 @@ export default function DashboardPage() {
     setFoundItems([]);
     setScore(0);
     setTimer(TIMER_DURATION);
+    setTimerZone('green');
     setIsTimerActive(false);
     setFeedback(null);
 
@@ -214,8 +250,17 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="pt-14 px-4 pb-8 max-w-7xl mx-auto">
-      <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-120px)]">
+    <>
+      <DashboardHeader
+        timer={timer}
+        timerZone={timerZone}
+        score={score}
+        hasContent={hasContent}
+        gameOver={gameOver}
+        revealing={revealing}
+      />
+      <div className="pt-14 px-4 pb-8 max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-120px)] pb-32">
         {/* Left: Game Area */}
         <div className="flex-1 mt-5 relative">
           {/* Toggle Button - Only show when game is active */}
@@ -266,27 +311,31 @@ export default function DashboardPage() {
           />
 
           {hasContent && (
-            <>
-              <GameTimer
-                timer={timer}
-                score={score}
-                foundItems={foundItems}
-                gameMode={gameMode}
-                gameOver={gameOver}
-              />
-
-              {!gameOver && (
-                <GameResponse
-                  gameMode={gameMode}
-                  checking={checking}
-                  feedback={feedback}
-                  onSubmit={handleSubmit}
-                />
-              )}
-            </>
+            <GameTimer
+              foundItems={foundItems}
+              gameMode={gameMode}
+              gameOver={gameOver}
+            />
           )}
         </div>
       </div>
     </div>
+
+    {/* Sticky Bottom Input */}
+    {hasContent && !gameOver && (
+      <div className="fixed bottom-0 left-0 right-0 z-40 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="lg:ml-auto lg:w-96">
+            <GameResponse
+              gameMode={gameMode}
+              checking={checking}
+              feedback={feedback}
+              onSubmit={handleSubmit}
+            />
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
