@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import { useVoiceRecognition } from '@/lib/hooks/useVoiceRecognition';
 import { Loader2, Dice5, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,41 +26,11 @@ export default function GameControls({
   onGiveUp
 }: GameControlsProps) {
   const [subject, setSubject] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
 
-  // Voice recognition setup
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-        recognition.onend = () => setIsListening(false);
-        recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setSubject((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        };
-        recognitionRef.current = recognition;
-      }
-    }
-  }, []);
-
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert("Voice input not supported in this browser");
-      return;
-    }
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      setIsListening(true);
-      recognitionRef.current.start();
-    }
-  };
+  // Voice recognition hook
+  const { isListening, toggleListening, isSupported } = useVoiceRecognition((transcript) => {
+    setSubject((prev) => (prev ? `${prev} ${transcript}` : transcript));
+  });
 
   const handleStart = () => {
     onStartGame(subject);
@@ -92,7 +63,7 @@ export default function GameControls({
               placeholder={gameMode === 'LOGIC' ? 'Math, riddles, etc...' : 'A futuristic city...'}
               className="bg-zinc-50 border-zinc-200 pr-10 focus-visible:ring-orange-500/20"
             />
-            {recognitionRef.current && (
+            {isSupported && (
               <button
                 onClick={toggleListening}
                 disabled={loading || (hasContent && !gameOver)}

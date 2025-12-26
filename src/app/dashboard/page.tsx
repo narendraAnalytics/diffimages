@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { GameMode, DiffGameData, LogicGameData, Difference } from '@/lib/gemini/types';
 import {
   generateDiffGame,
@@ -17,7 +18,6 @@ import GameArea from '@/components/dashboard/GameArea';
 import GameControls from '@/components/dashboard/GameControls';
 import GameTimer from '@/components/dashboard/GameTimer';
 import GameResponse from '@/components/dashboard/GameResponse';
-import GameResults from '@/components/dashboard/GameResults';
 
 const TIMER_DURATION = 15;
 
@@ -62,6 +62,9 @@ export default function DashboardPage() {
   const [differences, setDifferences] = useState<Difference[]>([]);
   const [revealing, setRevealing] = useState(false);
   const [logicSolution, setLogicSolution] = useState<string | null>(null);
+
+  // UI State
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   const hasContent = !!(images || singleImage || logicGame);
 
@@ -214,7 +217,22 @@ export default function DashboardPage() {
     <div className="pt-14 px-4 pb-8 max-w-7xl mx-auto">
       <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-120px)]">
         {/* Left: Game Area */}
-        <div className="flex-1">
+        <div className="flex-1 mt-5 relative">
+          {/* Toggle Button - Only show when game is active */}
+          {hasContent && (
+            <button
+              onClick={() => setIsSidebarVisible(!isSidebarVisible)}
+              className="absolute top-2 right-2 z-10 p-2 rounded-lg bg-white/80 backdrop-blur-md border border-white/20 shadow-lg hover:bg-white/90 transition-all duration-300 hover:scale-110"
+              title={isSidebarVisible ? "Hide controls" : "Show controls"}
+            >
+              {isSidebarVisible ? (
+                <ChevronRight className="w-5 h-5 text-zinc-700" />
+              ) : (
+                <ChevronLeft className="w-5 h-5 text-zinc-700" />
+              )}
+            </button>
+          )}
+
           <GameArea
             gameMode={gameMode}
             images={images}
@@ -229,7 +247,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Right: Controls Sidebar */}
-        <div className="w-full lg:w-96 space-y-6">
+        <div className={`w-full lg:w-96 space-y-6 mt-10 transition-all duration-300 ${
+          isSidebarVisible ? 'block' : 'hidden'
+        }`}>
           <GameModeSelector
             gameMode={gameMode}
             setGameMode={setGameMode}

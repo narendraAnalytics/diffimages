@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import { useVoiceRecognition } from '@/lib/hooks/useVoiceRecognition';
 import { Loader2, ArrowRight, Mic, MicOff, CheckCircle, XCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,41 +17,11 @@ interface GameResponseProps {
 
 export default function GameResponse({ gameMode, checking, feedback, onSubmit }: GameResponseProps) {
   const [guess, setGuess] = useState('');
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
 
-  // Voice recognition setup
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-        recognition.onend = () => setIsListening(false);
-        recognition.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setGuess((prev) => (prev ? `${prev} ${transcript}` : transcript));
-        };
-        recognitionRef.current = recognition;
-      }
-    }
-  }, []);
-
-  const toggleListening = () => {
-    if (!recognitionRef.current) {
-      alert("Voice input not supported in this browser");
-      return;
-    }
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      setIsListening(true);
-      recognitionRef.current.start();
-    }
-  };
+  // Voice recognition hook
+  const { isListening, toggleListening, isSupported } = useVoiceRecognition((transcript) => {
+    setGuess((prev) => (prev ? `${prev} ${transcript}` : transcript));
+  });
 
   const handleSubmit = () => {
     if (!guess.trim()) return;
@@ -79,7 +50,7 @@ export default function GameResponse({ gameMode, checking, feedback, onSubmit }:
             placeholder={gameMode === 'LOGIC' ? 'Enter your answer...' : 'What is different/wrong?'}
             className="bg-zinc-50 border-zinc-200 pr-10 focus-visible:ring-orange-500/20"
           />
-          {recognitionRef.current && (
+          {isSupported && (
             <button
               onClick={toggleListening}
               className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md transition-all ${
