@@ -17,7 +17,6 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import GameModeSelector from '@/components/dashboard/GameModeSelector';
 import GameArea from '@/components/dashboard/GameArea';
 import GameControls from '@/components/dashboard/GameControls';
-import GameTimer from '@/components/dashboard/GameTimer';
 import GameResponse from '@/components/dashboard/GameResponse';
 import GameHistoryModal from '@/components/dashboard/GameHistoryModal';
 import { BeepGenerator } from '@/lib/audio/beepGenerator';
@@ -707,14 +706,6 @@ export default function DashboardPage() {
             onStartGame={handleStartGame}
             onGiveUp={handleGiveUp}
           />
-
-          {hasContent && (
-            <GameTimer
-              foundItems={foundItems}
-              gameMode={gameMode}
-              gameOver={gameOver}
-            />
-          )}
         </div>
       </div>
     </div>
