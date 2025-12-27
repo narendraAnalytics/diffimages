@@ -121,21 +121,37 @@ export default function GameArea({
     const relX = ((e.clientX - rect.left) / rect.width) * 1000;
     const relY = ((e.clientY - rect.top) / rect.height) * 1000;
 
-    // Check if click intersects any bounding box
-    const found = gameAnswers.find(answer => {
+    // Find ALL boxes that contain the click point
+    const matchingBoxes = gameAnswers.filter(answer => {
       const [ymin, xmin, ymax, xmax] = answer.box_2d;
       return relY >= ymin && relY <= ymax && relX >= xmin && relX <= xmax;
     });
 
-    if (found && !foundIds.includes(found.id)) {
-      // Correct click on unfound difference
-      onImageClick(found.id, found.description);
-    } else if (found && foundIds.includes(found.id)) {
-      // Already found this difference
-      onImageClick(-1, 'Spot already found!');
-    } else {
-      // Wrong spot - no difference here
+    if (matchingBoxes.length === 0) {
+      // No box clicked - wrong spot
       onImageClick(-2, 'Nothing suspicious there. Look closer!');
+      return;
+    }
+
+    // Calculate box size (area) for each matching box
+    const boxesWithSize = matchingBoxes.map(box => {
+      const [ymin, xmin, ymax, xmax] = box.box_2d;
+      const area = (ymax - ymin) * (xmax - xmin); // Calculate area
+      return { ...box, area };
+    });
+
+    // Sort by size (smallest first) to prioritize smaller differences
+    boxesWithSize.sort((a, b) => a.area - b.area);
+
+    // Find first box that is NOT already found
+    const unfoundBox = boxesWithSize.find(box => !foundIds.includes(box.id));
+
+    if (unfoundBox) {
+      // Found a new difference (prioritized smallest unfound box)
+      onImageClick(unfoundBox.id, unfoundBox.description);
+    } else {
+      // All boxes at this location are already found
+      onImageClick(-1, 'Spot already found!');
     }
   };
 
@@ -195,7 +211,7 @@ export default function GameArea({
             {!gameOver && gameAnswers.filter(a => foundIds.includes(a.id)).map(found => (
               <div
                 key={`found-original-${found.id}`}
-                className="absolute border-4 border-green-500 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
+                className="absolute border-4 border-green-500 bg-green-500/20 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
                 style={{
                   top: `${found.box_2d[0] / 10}%`,
                   left: `${found.box_2d[1] / 10}%`,
@@ -209,15 +225,10 @@ export default function GameArea({
               </div>
             ))}
             {gameOver && !revealing && !isHovering && differences.map(diff => {
-              // Check if user found this difference (by clicking OR typing)
-              const foundByClick = foundIds.includes(diff.id);
-              const foundByTyping = foundItems.some(item =>
-                item.toLowerCase().includes(diff.description.toLowerCase()) ||
-                diff.description.toLowerCase().includes(item.toLowerCase())
-              );
-              const wasFound = foundByClick || foundByTyping;
+              // Check if user found this difference by clicking
+              const wasFound = foundIds.includes(diff.id);
 
-              // GREEN if found (by any method), RED if missed
+              // GREEN if found, RED if missed
               const borderColor = wasFound ? 'border-green-600' : 'border-red-600';
               const bgColor = wasFound ? 'bg-green-600' : 'bg-red-600';
 
@@ -253,7 +264,7 @@ export default function GameArea({
             {!gameOver && gameAnswers.filter(a => foundIds.includes(a.id)).map(found => (
               <div
                 key={`found-modified-${found.id}`}
-                className="absolute border-4 border-green-500 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
+                className="absolute border-4 border-green-500 bg-green-500/20 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
                 style={{
                   top: `${found.box_2d[0] / 10}%`,
                   left: `${found.box_2d[1] / 10}%`,
@@ -267,15 +278,10 @@ export default function GameArea({
               </div>
             ))}
             {gameOver && !revealing && !isHovering && differences.map(diff => {
-              // Check if user found this difference (by clicking OR typing)
-              const foundByClick = foundIds.includes(diff.id);
-              const foundByTyping = foundItems.some(item =>
-                item.toLowerCase().includes(diff.description.toLowerCase()) ||
-                diff.description.toLowerCase().includes(item.toLowerCase())
-              );
-              const wasFound = foundByClick || foundByTyping;
+              // Check if user found this difference by clicking
+              const wasFound = foundIds.includes(diff.id);
 
-              // GREEN if found (by any method), RED if missed
+              // GREEN if found, RED if missed
               const borderColor = wasFound ? 'border-green-600' : 'border-red-600';
               const bgColor = wasFound ? 'bg-green-600' : 'bg-red-600';
 
@@ -314,7 +320,7 @@ export default function GameArea({
             {!gameOver && gameAnswers.filter(a => foundIds.includes(a.id)).map(found => (
               <div
                 key={`found-single-${found.id}`}
-                className="absolute border-4 border-green-500 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
+                className="absolute border-4 border-green-500 bg-green-500/20 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
                 style={{
                   top: `${found.box_2d[0] / 10}%`,
                   left: `${found.box_2d[1] / 10}%`,
@@ -328,15 +334,10 @@ export default function GameArea({
               </div>
             ))}
             {gameOver && !revealing && !isHovering && differences.map(diff => {
-              // Check if user found this error (by clicking OR typing)
-              const foundByClick = foundIds.includes(diff.id);
-              const foundByTyping = foundItems.some(item =>
-                item.toLowerCase().includes(diff.description.toLowerCase()) ||
-                diff.description.toLowerCase().includes(item.toLowerCase())
-              );
-              const wasFound = foundByClick || foundByTyping;
+              // Check if user found this error by clicking
+              const wasFound = foundIds.includes(diff.id);
 
-              // GREEN if found (by any method), RED if missed
+              // GREEN if found, RED if missed
               const borderColor = wasFound ? 'border-green-600' : 'border-red-600';
               const bgColor = wasFound ? 'bg-green-600' : 'bg-red-600';
 
@@ -544,13 +545,8 @@ export default function GameArea({
                     </p>
                   ) : (
                     differences.map((diff, index) => {
-                      // Check if user found this difference (by clicking OR typing)
-                      const foundByClick = foundIds.includes(diff.id);
-                      const foundByTyping = foundItems.some(item =>
-                        item.toLowerCase().includes(diff.description.toLowerCase()) ||
-                        diff.description.toLowerCase().includes(item.toLowerCase())
-                      );
-                      const wasFound = foundByClick || foundByTyping;
+                      // Check if user found this difference by clicking
+                      const wasFound = foundIds.includes(diff.id);
 
                       return (
                         <div

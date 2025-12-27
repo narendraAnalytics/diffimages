@@ -3126,5 +3126,33 @@ When TypeScript narrows types in conditional blocks, avoid redundant checks for 
 
 ---
 
+ What Changed:
+
+  🎨 Visual Fix:
+
+  - Green boxes are now semi-transparent (20% opacity)
+  - You can see through them to spot other differences underneath
+  - Green border still clearly marks what you found
+
+  🎯 Click Fix:
+
+  - System now finds ALL boxes at click location
+  - Sorts them by size (smallest first)
+  - Returns the smallest unfound box
+  - Skip already-found boxes automatically
+
+  How It Works Now:
+
+  Example with overlapping differences:
+  Click 1: Finds tiny dot (smallest box) ✓
+  Click 2: Finds small crack (next smallest) ✓
+  Click 3: Finds large window (largest) ✓
+
+  Benefits:
+  - ✅ Can see differences through green boxes
+  - ✅ Can click nested/overlapping boxes
+  - ✅ No more "stuck" situations
+  - ✅ All other code and UI unchanged
+
 **End of Session 6 Documentation**
 *Last Updated: December 26, 2025*
