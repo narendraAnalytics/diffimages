@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, Trophy } from 'lucide-react';
+import { Home, Trophy, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip } from '@/components/ui/tooltip-custom';
 import DancingAvatar from './DancingAvatar';
 
 interface DashboardHeaderProps {
@@ -13,6 +14,8 @@ interface DashboardHeaderProps {
   hasContent?: boolean;
   gameOver?: boolean;
   revealing?: boolean;
+  onHistoryClick?: () => void;
+  showScrollNotification?: boolean;
 }
 
 export default function DashboardHeader({
@@ -21,7 +24,9 @@ export default function DashboardHeader({
   score = 0,
   hasContent = false,
   gameOver = false,
-  revealing = false
+  revealing = false,
+  onHistoryClick,
+  showScrollNotification = false
 }: DashboardHeaderProps) {
   const [showAvatar, setShowAvatar] = useState(false);
 
@@ -39,15 +44,55 @@ export default function DashboardHeader({
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-white/20 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="hover:bg-orange-100 transition-colors">
-              <Home className="w-6 h-6 text-orange-600" />
+          <Tooltip text="Home" gradientFrom="from-orange-500" gradientTo="to-pink-500">
+            <Link href="/">
+              <Button variant="ghost" size="icon" className="hover:bg-orange-100 transition-colors">
+                <Home className="w-6 h-6 text-orange-600" />
+              </Button>
+            </Link>
+          </Tooltip>
+          <Tooltip text="History" gradientFrom="from-blue-500" gradientTo="to-indigo-500">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:bg-blue-100 transition-colors"
+              onClick={onHistoryClick}
+            >
+              <History className="w-6 h-6 text-blue-600" />
             </Button>
-          </Link>
+          </Tooltip>
           <h1 className="text-xl font-bold bg-linear-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
             DiffGen Dashboard
           </h1>
         </div>
+
+        {/* Center: Scroll Notification (temporary) */}
+        {showScrollNotification && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="
+              px-6 py-3
+              bg-gradient-to-r from-orange-500 to-pink-500
+              text-white font-semibold text-sm rounded-full shadow-lg
+              animate-in fade-in slide-in-from-top-2 duration-300
+              flex items-center gap-2
+            ">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+              <span>Scroll down for results</span>
+            </div>
+          </div>
+        )}
 
         {/* Right: Timer + Score (only when game active) */}
         {hasContent && (

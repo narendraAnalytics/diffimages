@@ -19,7 +19,9 @@ import GameArea from '@/components/dashboard/GameArea';
 import GameControls from '@/components/dashboard/GameControls';
 import GameTimer from '@/components/dashboard/GameTimer';
 import GameResponse from '@/components/dashboard/GameResponse';
+import GameHistoryModal from '@/components/dashboard/GameHistoryModal';
 import { BeepGenerator } from '@/lib/audio/beepGenerator';
+import { saveGameSession } from '@/app/actions/save-game-session';
 
 const TIMER_DURATION = 75;
 
@@ -68,6 +70,11 @@ export default function DashboardPage() {
 
   // UI State
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showScrollNotification, setShowScrollNotification] = useState(false);
+
+  // Track current subject for database saves
+  const [currentSubject, setCurrentSubject] = useState<string>('');
 
   // Audio System
   const beepGeneratorRef = useRef<BeepGenerator | null>(null);
@@ -85,6 +92,17 @@ export default function DashboardPage() {
   const playBeeps = (count: number) => {
     beepGeneratorRef.current?.playBeeps(count);
   };
+
+  // Auto-hide scroll notification after 4 seconds
+  useEffect(() => {
+    if (showScrollNotification) {
+      const timeout = setTimeout(() => {
+        setShowScrollNotification(false);
+      }, 4000); // 4 seconds
+
+      return () => clearTimeout(timeout);
+    }
+  }, [showScrollNotification]);
 
   // Timer Logic with Sound
   useEffect(() => {
@@ -116,22 +134,145 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [isTimerActive, timer]);
 
+  // Compare user answers to revealed differences and award retroactive points
+  const awardRetroactivePoints = (
+    userAnswers: string[],
+    revealedDifferences: Difference[],
+    currentGameMode: GameMode
+  ): number => {
+    let pointsEarned = 0;
+    const pointsPerMatch = currentGameMode === 'DIFF' ? 1 : 2; // DIFF: 1pt, WRONG: 2pts
+
+    // For each user answer, check if it matches any revealed difference
+    userAnswers.forEach((userAnswer) => {
+      const answerLower = userAnswer.toLowerCase().trim();
+
+      const foundMatch = revealedDifferences.some((diff) => {
+        const descLower = diff.description.toLowerCase().trim();
+
+        // Fuzzy matching: Check if user answer is contained in description or vice versa
+        // This handles cases like:
+        // - User: "tree" → Diff: "The tree has more leaves"
+        // - User: "clock has 13 numbers" → Diff: "Clock displays 13 instead of 12"
+        return (
+          descLower.includes(answerLower) ||
+          answerLower.includes(descLower) ||
+          levenshteinSimilarity(answerLower, descLower) > 0.6 // 60% similarity threshold
+        );
+      });
+
+      if (foundMatch) {
+        pointsEarned += pointsPerMatch;
+      }
+    });
+
+    return pointsEarned;
+  };
+
+  // Helper: Calculate similarity between two strings (Levenshtein distance)
+  const levenshteinSimilarity = (str1: string, str2: string): number => {
+    const longer = str1.length > str2.length ? str1 : str2;
+    const shorter = str1.length > str2.length ? str2 : str1;
+
+    if (longer.length === 0) return 1.0;
+
+    const editDistance = levenshteinDistance(longer, shorter);
+    return (longer.length - editDistance) / longer.length;
+  };
+
+  const levenshteinDistance = (str1: string, str2: string): number => {
+    const matrix: number[][] = [];
+
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+
+    return matrix[str2.length][str1.length];
+  };
+
   // Handle Timeout
   const handleTimeout = async () => {
     setIsTimerActive(false);
     setGameOver(true);
     setRevealing(true);
+    setShowScrollNotification(true); // Show scroll notification
 
     try {
+      let revealedDifferences: Difference[] = [];
+
       if (gameMode === 'DIFF' && images) {
         const diffs = await getDifferences(images.original, images.modified);
         setDifferences(diffs);
+        revealedDifferences = diffs;
+
+        // Award retroactive points
+        if (foundItems.length > 0) {
+          const retroactivePoints = awardRetroactivePoints(foundItems, diffs, gameMode);
+          if (retroactivePoints > 0) {
+            setScore((s) => s + retroactivePoints);
+            setFeedback({
+              type: 'success',
+              message: `+${retroactivePoints} points awarded for your answers!`
+            });
+          }
+        }
       } else if (gameMode === 'WRONG' && singleImage) {
         const errors = await getErrors(singleImage);
         setDifferences(errors);
+        revealedDifferences = errors;
+
+        // Award retroactive points
+        if (foundItems.length > 0) {
+          const retroactivePoints = awardRetroactivePoints(foundItems, errors, gameMode);
+          if (retroactivePoints > 0) {
+            setScore((s) => s + retroactivePoints);
+            setFeedback({
+              type: 'success',
+              message: `+${retroactivePoints} points awarded for your answers!`
+            });
+          }
+        }
       } else if (gameMode === 'LOGIC' && logicGame) {
+        // LOGIC mode doesn't need retroactive scoring - already scored on submit
         setLogicSolution(cleanText(logicGame.solution) || "Time's up! The puzzle remains unsolved.");
       }
+
+      // Calculate final score including retroactive points
+      const finalScore = score + (gameMode !== 'LOGIC' && foundItems.length > 0
+        ? awardRetroactivePoints(foundItems, revealedDifferences, gameMode)
+        : 0);
+
+      // Save to database
+      await saveGameSession({
+        gameMode,
+        subject: currentSubject,
+        score: finalScore, // Use calculated final score
+        foundItems,
+        timeRemaining: timer,
+        completionStatus: 'timeout',
+        logicQuestion: logicGame?.question,
+        logicSolution: logicGame?.solution,
+        logicTitle: logicGame?.title,
+        differences: revealedDifferences,
+      });
     } catch (e) {
       console.error('Error getting answers:', e);
     } finally {
@@ -160,13 +301,16 @@ export default function DashboardPage() {
     try {
       if (gameMode === 'DIFF') {
         if (!topic) topic = RANDOM_THEMES[Math.floor(Math.random() * RANDOM_THEMES.length)];
+        setCurrentSubject(topic);
         const data = await generateDiffGame(topic);
         setImages(data);
       } else if (gameMode === 'WRONG') {
         if (!topic) topic = RANDOM_THEMES[Math.floor(Math.random() * RANDOM_THEMES.length)];
+        setCurrentSubject(topic);
         const data = await generateWrongGame(topic);
         setSingleImage(data.image);
       } else {
+        setCurrentSubject(topic || 'Logic Puzzle');
         const data = await generateLogicGame(topic);
         setLogicGame(data);
       }
@@ -179,45 +323,159 @@ export default function DashboardPage() {
     }
   };
 
+  // Handle bulk answer submission (comma-separated)
+  const handleBulkSubmit = async (answers: string[]) => {
+    // Validate all answers in parallel
+    const validationPromises = answers.map(async (answer) => {
+      try {
+        let res;
+        if (gameMode === 'DIFF' && images) {
+          res = await checkDifference(images.original, images.modified, answer, foundItems);
+        } else if (gameMode === 'WRONG' && singleImage) {
+          res = await checkWrongness(singleImage, answer, foundItems);
+        } else if (gameMode === 'LOGIC' && logicGame) {
+          res = await checkLogicAnswer(logicGame.question, answer);
+        }
+        return { answer, result: res };
+      } catch (error) {
+        return { answer, result: null };
+      }
+    });
+
+    const results = await Promise.all(validationPromises);
+
+    // Aggregate results
+    let correctCount = 0;
+    let duplicateCount = 0;
+    let incorrectCount = 0;
+    const newCorrectAnswers: string[] = [];
+    let totalPointsEarned = 0;
+
+    results.forEach(({ answer, result }) => {
+      if (result && result.correct) {
+        if (result.alreadyFound) {
+          duplicateCount++;
+        } else {
+          correctCount++;
+          newCorrectAnswers.push(answer);
+          const points = gameMode === 'LOGIC' ? 10 : gameMode === 'DIFF' ? 1 : 2;
+          totalPointsEarned += points;
+        }
+      } else {
+        incorrectCount++;
+      }
+    });
+
+    // Update score and foundItems
+    if (correctCount > 0) {
+      setScore((s) => s + totalPointsEarned);
+      setFoundItems((prev) => [...prev, ...newCorrectAnswers]);
+    }
+
+    // Build summary feedback message
+    const parts: string[] = [];
+
+    if (correctCount > 0) {
+      parts.push(`${correctCount} correct (+${totalPointsEarned} points)`);
+    }
+    if (incorrectCount > 0) {
+      parts.push(`${incorrectCount} incorrect`);
+    }
+    if (duplicateCount > 0) {
+      parts.push(`${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''}`);
+    }
+
+    const summaryMessage = parts.length > 0
+      ? parts.join(', ')
+      : 'No valid answers';
+
+    const feedbackType = correctCount > 0 ? 'success' : incorrectCount > 0 ? 'error' : 'info';
+
+    setFeedback({
+      type: feedbackType,
+      message: summaryMessage
+    });
+
+    // Special case: LOGIC mode ends on first correct answer
+    if (gameMode === 'LOGIC' && correctCount > 0) {
+      setGameOver(true);
+      setIsTimerActive(false);
+      // Use explanation from first correct answer
+      const firstCorrect = results.find(r => r.result?.correct && !r.result?.alreadyFound);
+      if (firstCorrect?.result?.explanation) {
+        setLogicSolution(cleanText(firstCorrect.result.explanation));
+      }
+    }
+  };
+
   // Submit Answer
   const handleSubmit = async (guess: string) => {
-    if (gameOver || !guess || checking) return;
+    const trimmedGuess = guess.trim();
+    if (!trimmedGuess || checking || gameOver) return;
 
     setChecking(true);
     setFeedback(null);
 
     try {
-      let res;
-      if (gameMode === 'DIFF' && images) {
-        res = await checkDifference(images.original, images.modified, guess, foundItems);
-      } else if (gameMode === 'WRONG' && singleImage) {
-        res = await checkWrongness(singleImage, guess, foundItems);
-      } else if (gameMode === 'LOGIC' && logicGame) {
-        res = await checkLogicAnswer(logicGame.question, guess);
-      }
+      // Parse comma-separated answers
+      const answers = trimmedGuess
+        .split(',')
+        .map(ans => ans.trim())
+        .filter(ans => ans.length > 0);
 
-      if (res && res.correct) {
-        if (res.alreadyFound) {
-          setFeedback({ type: 'info', message: 'Already discovered!' });
-        } else {
-          const points = gameMode === 'LOGIC' ? 10 : gameMode === 'DIFF' ? 1 : 2;
-          setScore((s) => s + points);
-          setFoundItems((prev) => [...prev, guess]);
-          setFeedback({ type: 'success', message: cleanText(res.explanation) || 'Correct answer!' });
-
-          // End game immediately for LOGIC mode
-          if (gameMode === 'LOGIC') {
-            setGameOver(true);
-            setIsTimerActive(false);
-            setLogicSolution(cleanText(res.explanation));
-          }
+      // Single answer mode (backward compatible)
+      if (answers.length === 1) {
+        // Keep existing single-answer logic unchanged
+        let res;
+        if (gameMode === 'DIFF' && images) {
+          res = await checkDifference(images.original, images.modified, answers[0], foundItems);
+        } else if (gameMode === 'WRONG' && singleImage) {
+          res = await checkWrongness(singleImage, answers[0], foundItems);
+        } else if (gameMode === 'LOGIC' && logicGame) {
+          res = await checkLogicAnswer(logicGame.question, answers[0]);
         }
-      } else {
-        setFeedback({ type: 'error', message: cleanText(res?.explanation) || 'Not quite right. Try again.' });
+
+        // Existing single-answer response handling
+        if (res && res.correct) {
+          if (res.alreadyFound) {
+            setFeedback({ type: 'info', message: 'Already discovered!' });
+          } else {
+            const points = gameMode === 'LOGIC' ? 10 : gameMode === 'DIFF' ? 1 : 2;
+            setScore((s) => s + points);
+            setFoundItems((prev) => [...prev, answers[0]]);
+            setFeedback({ type: 'success', message: cleanText(res.explanation) || 'Correct answer!' });
+
+            // End game immediately for LOGIC mode
+            if (gameMode === 'LOGIC') {
+              setGameOver(true);
+              setIsTimerActive(false);
+              setLogicSolution(cleanText(res.explanation));
+
+              // Save to database
+              await saveGameSession({
+                gameMode: 'LOGIC',
+                subject: currentSubject,
+                score: score + 10,
+                foundItems: [...foundItems, answers[0]],
+                timeRemaining: timer,
+                completionStatus: 'completed',
+                logicQuestion: logicGame?.question,
+                logicSolution: cleanText(res.explanation),
+                logicTitle: logicGame?.title,
+              });
+            }
+          }
+        } else {
+          setFeedback({ type: 'error', message: cleanText(res?.explanation) || 'Not quite right. Try again.' });
+        }
       }
-    } catch (e) {
-      console.error('Error checking answer:', e);
-      setFeedback({ type: 'error', message: 'Error verifying answer. Please try again.' });
+      // Bulk answer mode (new)
+      else {
+        await handleBulkSubmit(answers);
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      setFeedback({ type: 'error', message: 'Failed to check answer.' });
     } finally {
       setChecking(false);
     }
@@ -227,11 +485,40 @@ export default function DashboardPage() {
   const handleGiveUp = async () => {
     setIsTimerActive(false);
     setGameOver(true);
+    setRevealing(true);
 
-    if (gameMode === 'LOGIC' && logicGame) {
-      setLogicSolution(cleanText(logicGame.solution));
-    } else {
-      handleTimeout();
+    try {
+      let revealedDifferences: Difference[] = [];
+
+      if (gameMode === 'DIFF' && images) {
+        const diffs = await getDifferences(images.original, images.modified);
+        setDifferences(diffs);
+        revealedDifferences = diffs;
+      } else if (gameMode === 'WRONG' && singleImage) {
+        const errors = await getErrors(singleImage);
+        setDifferences(errors);
+        revealedDifferences = errors;
+      } else if (gameMode === 'LOGIC' && logicGame) {
+        setLogicSolution(cleanText(logicGame.solution));
+      }
+
+      // Save to database with given_up status
+      await saveGameSession({
+        gameMode,
+        subject: currentSubject,
+        score,
+        foundItems,
+        timeRemaining: timer,
+        completionStatus: 'given_up',
+        logicQuestion: logicGame?.question,
+        logicSolution: gameMode === 'LOGIC' ? cleanText(logicGame?.solution) : undefined,
+        logicTitle: logicGame?.title,
+        differences: revealedDifferences,
+      });
+    } catch (e) {
+      console.error('Error:', e);
+    } finally {
+      setRevealing(false);
     }
   };
 
@@ -258,6 +545,8 @@ export default function DashboardPage() {
         hasContent={hasContent}
         gameOver={gameOver}
         revealing={revealing}
+        onHistoryClick={() => setShowHistory(true)}
+        showScrollNotification={showScrollNotification}
       />
       <div className="pt-14 px-4 pb-8 max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-120px)] pb-32">
@@ -336,6 +625,12 @@ export default function DashboardPage() {
         </div>
       </div>
     )}
+
+    {/* History Modal */}
+    <GameHistoryModal
+      isOpen={showHistory}
+      onClose={() => setShowHistory(false)}
+    />
     </>
   );
 }

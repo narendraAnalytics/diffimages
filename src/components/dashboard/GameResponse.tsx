@@ -47,7 +47,11 @@ export default function GameResponse({ gameMode, checking, feedback, onSubmit }:
             value={guess}
             onChange={(e) => setGuess(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={gameMode === 'LOGIC' ? 'Enter your answer...' : 'What is different/wrong?'}
+            placeholder={
+              gameMode === 'LOGIC'
+                ? "Enter your answer (or multiple: ans1, ans2, ...)"
+                : "What's different/wrong? (or multiple: diff1, diff2, ...)"
+            }
             className="bg-zinc-50 border-zinc-200 pr-10 focus-visible:ring-orange-500/20"
           />
           {isSupported && (
@@ -76,7 +80,7 @@ export default function GameResponse({ gameMode, checking, feedback, onSubmit }:
           ) : (
             <>
               <ArrowRight className="w-4 h-4 mr-2" />
-              Verify Answer
+              {guess.includes(',') ? 'Verify Answers' : 'Verify Answer'}
             </>
           )}
         </Button>
