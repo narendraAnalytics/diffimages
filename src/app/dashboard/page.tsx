@@ -72,6 +72,7 @@ export default function DashboardPage() {
   const [gameAnswers, setGameAnswers] = useState<Difference[]>([]);  // Pre-fetched bounding boxes
   const [foundIds, setFoundIds] = useState<number[]>([]);             // IDs found via clicking
   const [livePoints, setLivePoints] = useState<{value: number, id: number} | null>(null); // Live points animation
+  const [wrongClickToast, setWrongClickToast] = useState<string | null>(null); // Wrong click toast message
 
   // UI State
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
@@ -145,10 +146,9 @@ export default function DashboardPage() {
       const penalty = gameMode === 'DIFF' ? -1 : -2; // Lose points for wrong guess
       setScore(s => Math.max(0, s + penalty)); // Don't go below 0
 
-      setFeedback({
-        type: 'error',
-        message: `✗ ${description} (${penalty} points)`
-      });
+      // Show toast overlay instead of bottom feedback
+      setWrongClickToast(description);
+      setTimeout(() => setWrongClickToast(null), 2000);
 
       // Show live points animation (negative)
       showLivePoints(penalty);
@@ -685,6 +685,7 @@ export default function DashboardPage() {
             foundIds={foundIds}
             foundItems={foundItems}
             onImageClick={handleImageClick}
+            wrongClickMessage={wrongClickToast}
           />
         </div>
 

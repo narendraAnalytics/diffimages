@@ -21,6 +21,7 @@ interface GameAreaProps {
   foundIds: number[];
   foundItems: string[];
   onImageClick: (clickId: number, description: string) => void;
+  wrongClickMessage: string | null;
 }
 
 const COLOR_PALETTE = [
@@ -52,7 +53,8 @@ export default function GameArea({
   gameAnswers,
   foundIds,
   foundItems,
-  onImageClick
+  onImageClick,
+  wrongClickMessage
 }: GameAreaProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -440,6 +442,18 @@ export default function GameArea({
               <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none z-10 animate-in fade-in duration-500">
                 <div className="bg-blue-600/90 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full backdrop-blur-sm animate-pulse shadow-lg">
                   {gameMode === 'DIFF' ? '💡 Click on LEFT image to find differences' : '💡 Click on image to find errors'}
+                </div>
+              </div>
+            )}
+
+            {/* Wrong Click Toast */}
+            {wrongClickMessage && (
+              <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none z-20 animate-in fade-in zoom-in-95 duration-300">
+                <div className="bg-red-500/90 text-white px-6 py-3 rounded-lg backdrop-blur-sm shadow-xl flex items-center gap-3">
+                  <div className="bg-white/20 rounded-full p-1">
+                    <X className="w-5 h-5" />
+                  </div>
+                  <span className="font-semibold">{wrongClickMessage}</span>
                 </div>
               </div>
             )}

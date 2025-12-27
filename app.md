@@ -2821,3 +2821,310 @@ In this final session of the day, we focused on elevating the dashboard's user e
 
 **End of Session 5 Documentation**
 *Last Updated: December 25, 2025*
+
+---
+
+---
+
+# Session 6: Interactive Click Detection & User Experience Enhancements
+
+**Date:** December 26, 2025
+**Session Focus:** Click-to-Find Functionality, TypeScript Fixes, Interactive Tooltips
+
+---
+
+## Session Summary
+
+In this session, we enhanced the dashboard's interactive gameplay by implementing click-to-find functionality for DIFF and WRONG modes, fixing critical TypeScript errors, and adding user-friendly tooltips to guide players. The focus was on improving user experience through clear visual feedback and eliminating technical issues that were blocking the build process.
+
+### What Was Accomplished
+
+- ✅ **Fixed TypeScript Type Narrowing Errors:** Resolved operator precedence issues in `GameArea.tsx` that were preventing successful builds.
+- ✅ **Implemented Click Hint Tooltip:** Added an auto-hiding tooltip that guides users to click on images in DIFF/WRONG modes.
+- ✅ **Mode-Specific Messaging:** Created distinct tooltip messages for DIFF mode (specify LEFT image) and WRONG mode (single image).
+- ✅ **Auto-Hide Behavior:** Tooltip automatically disappears after 4 seconds to avoid cluttering the UI.
+- ✅ **Confirmed Zero Database Impact:** All changes are client-side only, requiring no backend modifications.
+
+---
+
+## Project Context Update
+
+### Current State
+- **Interactive Gameplay:** Click detection now works seamlessly in DIFF and WRONG modes.
+- **TypeScript Safety:** All type narrowing errors resolved; build passes without warnings.
+- **User Guidance:** First-time players receive clear instructions via animated tooltips.
+- **Code Stability:** No breaking changes; all existing functionality preserved.
+
+---
+
+## Implementation Details
+
+### 1. TypeScript Type Narrowing Fix
+
+**Problem:**
+TypeScript was throwing errors at lines 167, 225, and 258 in `GameArea.tsx`:
+```
+This comparison appears to be unintentional because the types '"DIFF"' and '"LOGIC"' have no overlap.
+```
+
+**Root Cause:**
+Inside conditional blocks like `{gameMode === 'DIFF' && images ? (`, TypeScript had already narrowed `gameMode` to `'DIFF'`. Checking `gameMode === 'LOGIC'` within that block was impossible and flagged as an error.
+
+**Solution:**
+Removed the redundant `|| gameMode === 'LOGIC'` check from the `pointerEvents` style:
+
+```typescript
+// Before (Lines 167, 225, 258)
+style={{
+  pointerEvents: gameOver || gameMode === 'LOGIC' ? 'none' : 'auto'
+}}
+
+// After
+style={{
+  pointerEvents: gameOver ? 'none' : 'auto'
+}}
+```
+
+**Impact:** Applied to all three image rendering locations (original DIFF image, modified DIFF image, and single WRONG image).
+
+**File:** `src/components/dashboard/GameArea.tsx`
+
+---
+
+### 2. Click Hint Tooltip Implementation
+
+**Feature:** Auto-hiding tooltip that appears when games start in DIFF or WRONG modes.
+
+**Visual Design:**
+- Blue background with 90% opacity (`bg-blue-600/90`)
+- White uppercase text with wide letter spacing
+- Rounded pill shape with backdrop blur effect
+- Centered at top of image area
+- Animated entrance with fade-in and pulse effect
+
+**Behavior:**
+- Shows when game starts (DIFF or WRONG mode only)
+- Auto-hides after 4 seconds
+- Does not reappear during the same game
+- Does not show in LOGIC mode or when game is over
+
+**Code Changes:**
+
+**A. Added State Variable (Line 62):**
+```typescript
+const [showClickHint, setShowClickHint] = useState(false);
+```
+
+**B. Added useEffect Hook (Lines 154-173):**
+```typescript
+// Show click hint when game starts in DIFF/WRONG modes
+useEffect(() => {
+  // Show hint only when:
+  // - Game is active (not over)
+  // - In DIFF or WRONG mode (not LOGIC)
+  // - Game answers are loaded
+  if (!gameOver && gameMode !== 'LOGIC' && gameAnswers && gameAnswers.length > 0) {
+    setShowClickHint(true);
+
+    // Auto-hide after 4 seconds
+    const timeout = setTimeout(() => {
+      setShowClickHint(false);
+    }, 4000);
+
+    // Cleanup timeout on unmount or when dependencies change
+    return () => clearTimeout(timeout);
+  } else {
+    setShowClickHint(false);
+  }
+}, [gameMode, gameOver, gameAnswers]);
+```
+
+**Key Points:**
+- Triggers when `gameAnswers` loads (game is ready for interaction)
+- Resets between games via dependency array
+- Cleans up timeout to prevent memory leaks
+- Hides immediately if game ends or mode changes
+
+**C. Added Tooltip UI (Lines 438-445):**
+```typescript
+{/* Click Hint for DIFF/WRONG modes */}
+{!gameOver && (gameMode === 'DIFF' || gameMode === 'WRONG') && showClickHint && (
+  <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none z-10 animate-in fade-in duration-500">
+    <div className="bg-blue-600/90 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full backdrop-blur-sm animate-pulse shadow-lg">
+      {gameMode === 'DIFF' ? '💡 Click on LEFT image to find differences' : '💡 Click on image to find errors'}
+    </div>
+  </div>
+)}
+```
+
+**Styling Breakdown:**
+- `absolute top-4 left-1/2 -translate-x-1/2`: Centered horizontally at top
+- `pointer-events-none z-10`: Doesn't block interactions, appears above images
+- `animate-in fade-in duration-500`: Smooth entrance animation
+- `bg-blue-600/90`: Blue background with 90% opacity
+- `backdrop-blur-sm`: Glass morphism effect
+- `animate-pulse`: Subtle pulsing to draw attention
+- `shadow-lg`: Depth for visibility
+
+**File:** `src/components/dashboard/GameArea.tsx`
+
+---
+
+### 3. Mode-Specific Messages
+
+**Rationale:**
+- **DIFF mode** has TWO images (original left, modified right). Both are clickable, but users might be confused about which to click.
+- **WRONG mode** has a SINGLE image with errors to find.
+
+**Messages:**
+- **DIFF mode:** "💡 Click on LEFT image to find differences"
+- **WRONG mode:** "💡 Click on image to find errors"
+
+**Implementation:**
+Simple ternary operator in the tooltip JSX:
+```typescript
+{gameMode === 'DIFF' ? '💡 Click on LEFT image to find differences' : '💡 Click on image to find errors'}
+```
+
+**User Feedback:** User specifically requested LEFT image clarification to avoid confusion with the two-image DIFF layout.
+
+---
+
+## Technical Decisions
+
+### 1. Why Remove `gameMode === 'LOGIC'` Check?
+
+TypeScript's type narrowing system infers types within conditional blocks. Inside `{gameMode === 'DIFF' && ...}`, the type of `gameMode` is narrowed to `'DIFF'` only. Checking for `'LOGIC'` is impossible and creates a type error.
+
+**Solution:** Since the check is inside a DIFF-specific block, we only need to check `gameOver` for pointer events.
+
+### 2. Why 4-Second Auto-Hide?
+
+- Long enough for users to read and understand the message
+- Short enough to avoid UI clutter
+- Matches industry-standard tooltip display durations
+- Users can start playing before tooltip disappears (non-blocking)
+
+### 3. Why Not Show in LOGIC Mode?
+
+LOGIC mode doesn't involve clicking on images—users type answers into an input field. A click hint would be misleading and confusing.
+
+### 4. Why Blue Background Instead of Another Color?
+
+- Distinct from the existing hover hint (which uses a different color)
+- Blue conveys informational/helpful tone (UI convention)
+- High contrast with white text for readability
+- Matches the overall game's color palette
+
+---
+
+## Files Modified
+
+### `src/components/dashboard/GameArea.tsx`
+
+**Line 62:** Added `const [showClickHint, setShowClickHint] = useState(false);`
+
+**Lines 154-173:** Added useEffect hook for tooltip display control
+
+**Lines 167, 225, 258:** Fixed TypeScript errors by removing `gameMode === 'LOGIC'` check
+
+**Lines 438-445:** Added click hint tooltip UI with mode-specific text
+
+---
+
+## Testing Checklist
+
+**DIFF Mode:**
+- [x] Hint appears when game starts
+- [x] Hint displays "Click on LEFT image to find differences"
+- [x] Hint disappears after 4 seconds
+- [x] Hint doesn't reappear during same game
+- [x] Hint appears again on "Play Again"
+
+**WRONG Mode:**
+- [x] Hint appears when game starts
+- [x] Hint displays "Click on image to find errors"
+- [x] Hint disappears after 4 seconds
+
+**LOGIC Mode:**
+- [x] Hint does NOT appear (no click functionality)
+
+**Game Over:**
+- [x] Hint disappears immediately when timer runs out or user gives up
+
+**UI/UX:**
+- [x] Hint is visible and readable
+- [x] Hint doesn't block image viewing or clicking
+- [x] Animation is smooth (fade-in + pulse)
+- [x] Styling is consistent with existing patterns
+
+**TypeScript:**
+- [x] No type errors in GameArea.tsx
+- [x] Build passes successfully
+- [x] Diagnostics show zero errors
+
+---
+
+## Session Statistics
+
+**Files Modified:** 1
+- `src/components/dashboard/GameArea.tsx`
+
+**Lines Changed:**
+- Added: ~25 lines (state, useEffect, tooltip UI)
+- Modified: 3 lines (pointerEvents fixes)
+
+**Database Changes:** None (all changes are client-side UI)
+
+**TypeScript Errors Fixed:** 3 (lines 167, 225, 258)
+
+---
+
+## User Flow Impact
+
+### Before Session 6:
+1. User starts DIFF/WRONG game
+2. User sees images but may not know they're clickable
+3. User may click wrong image in DIFF mode (right instead of left)
+4. TypeScript errors prevent clean builds
+
+### After Session 6:
+1. User starts DIFF/WRONG game
+2. **Tooltip appears:** "💡 Click on LEFT image to find differences" (DIFF) or "💡 Click on image to find errors" (WRONG)
+3. Tooltip fades away after 4 seconds
+4. User knows exactly which image to click
+5. Clean TypeScript build with zero errors
+
+---
+
+## Developer Notes
+
+### Tooltip Pattern Reuse
+The click hint tooltip follows the same pattern as the existing "Hover to reveal image" hint:
+- `useState` for visibility control
+- `useEffect` with `setTimeout` for auto-hide
+- Cleanup function to prevent memory leaks
+- Conditional rendering based on game state
+
+### Type Narrowing Best Practices
+When TypeScript narrows types in conditional blocks, avoid redundant checks for mutually exclusive types. Trust the type system's inference.
+
+### Future Enhancements
+- [ ] Add tooltip for "Hover to zoom" feature
+- [ ] Create onboarding tutorial for first-time users
+- [ ] Add tooltip dismissal via click
+- [ ] Animate tooltip exit (currently just disappears)
+
+---
+
+## Related Documentation
+
+- **Session 4:** Dashboard Implementation & Game Modes
+- **Session 5:** Full View Mode & UI Polish
+- **Plan File:** `C:\Users\ES\.claude\plans\radiant-scribbling-alpaca.md`
+- **Codebase:** `src/components/dashboard/GameArea.tsx`
+
+---
+
+**End of Session 6 Documentation**
+*Last Updated: December 26, 2025*
