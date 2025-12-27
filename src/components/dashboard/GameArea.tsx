@@ -17,6 +17,10 @@ interface GameAreaProps {
   differences: Difference[];
   logicSolution: string | null;
   onPlayAgain: () => void;
+  gameAnswers: Difference[];
+  foundIds: number[];
+  foundItems: string[];
+  onImageClick: (clickId: number, description: string) => void;
 }
 
 const COLOR_PALETTE = [
@@ -44,15 +48,22 @@ export default function GameArea({
   revealing,
   differences,
   logicSolution,
-  onPlayAgain
+  onPlayAgain,
+  gameAnswers,
+  foundIds,
+  foundItems,
+  onImageClick
 }: GameAreaProps) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
   const [isFullView, setIsFullView] = useState(false);
+  const [dragDistance, setDragDistance] = useState(0);
+  const [showClickHint, setShowClickHint] = useState(false);
   const isDragging = useRef(false);
   const startPos = useRef({ x: 0, y: 0 });
   const startPan = useRef({ x: 0, y: 0 });
+  const dragStartPos = useRef({ x: 0, y: 0 });
 
   const hasContent = images || singleImage || logicGame;
 
@@ -60,6 +71,7 @@ export default function GameArea({
   const handleStart = (clientX: number, clientY: number) => {
     isDragging.current = true;
     startPos.current = { x: clientX, y: clientY };
+    dragStartPos.current = { x: clientX, y: clientY }; // Track for distance calc
     startPan.current = { ...pan };
   };
 
@@ -68,15 +80,61 @@ export default function GameArea({
     const deltaX = (clientX - startPos.current.x) / zoom;
     const deltaY = (clientY - startPos.current.y) / zoom;
     setPan({ x: startPan.current.x + deltaX, y: startPan.current.y + deltaY });
+
+    // Calculate drag distance
+    const distance = Math.sqrt(
+      Math.pow(clientX - dragStartPos.current.x, 2) +
+      Math.pow(clientY - dragStartPos.current.y, 2)
+    );
+    setDragDistance(distance);
   };
 
   const handleEnd = () => {
     isDragging.current = false;
+    // Reset drag distance after short delay (prevents accidental clicks)
+    setTimeout(() => setDragDistance(0), 100);
   };
 
   const resetZoom = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
+  };
+
+  // Handle image click for click-to-find feature
+  const handleImageClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    // Ignore if user was dragging (pan/zoom interaction)
+    if (dragDistance >= 5) {
+      return;
+    }
+
+    // Ignore if game over, loading, or LOGIC mode
+    if (gameOver || !gameAnswers || gameAnswers.length === 0 || gameMode === 'LOGIC') {
+      return;
+    }
+
+    const img = e.currentTarget;
+    const rect = img.getBoundingClientRect();
+
+    // Calculate normalized coordinates (0-1000 scale)
+    const relX = ((e.clientX - rect.left) / rect.width) * 1000;
+    const relY = ((e.clientY - rect.top) / rect.height) * 1000;
+
+    // Check if click intersects any bounding box
+    const found = gameAnswers.find(answer => {
+      const [ymin, xmin, ymax, xmax] = answer.box_2d;
+      return relY >= ymin && relY <= ymax && relX >= xmin && relX <= xmax;
+    });
+
+    if (found && !foundIds.includes(found.id)) {
+      // Correct click on unfound difference
+      onImageClick(found.id, found.description);
+    } else if (found && foundIds.includes(found.id)) {
+      // Already found this difference
+      onImageClick(-1, 'Spot already found!');
+    } else {
+      // Wrong spot - no difference here
+      onImageClick(-2, 'Nothing suspicious there. Look closer!');
+    }
   };
 
   // Handle Escape key
@@ -93,6 +151,27 @@ export default function GameArea({
     }
   }, [isFullView]);
 
+  // Show click hint when game starts in DIFF/WRONG modes
+  useEffect(() => {
+    // Show hint only when:
+    // - Game is active (not over)
+    // - In DIFF or WRONG mode (not LOGIC)
+    // - Game answers are loaded
+    if (!gameOver && gameMode !== 'LOGIC' && gameAnswers && gameAnswers.length > 0) {
+      setShowClickHint(true);
+
+      // Auto-hide after 4 seconds
+      const timeout = setTimeout(() => {
+        setShowClickHint(false);
+      }, 4000);
+
+      // Cleanup timeout on unmount or when dependencies change
+      return () => clearTimeout(timeout);
+    } else {
+      setShowClickHint(false);
+    }
+  }, [gameMode, gameOver, gameAnswers]);
+
   const renderImages = (imgMaxHeight: string) => (
     <div
       className="transition-transform duration-75 ease-linear"
@@ -104,47 +183,117 @@ export default function GameArea({
             <img
               src={`data:image/png;base64,${images.original}`}
               alt="Original"
-              className={`${imgMaxHeight} w-auto pointer-events-none select-none`}
+              className={`${imgMaxHeight} w-auto select-none cursor-crosshair`}
+              onClick={handleImageClick}
+              style={{
+                pointerEvents: gameOver ? 'none' : 'auto'
+              }}
             />
-            {gameOver && !revealing && !isHovering && differences.map(diff => (
+            {/* Real-time green markers for found items during play */}
+            {!gameOver && gameAnswers.filter(a => foundIds.includes(a.id)).map(found => (
               <div
-                key={diff.id}
-                className="absolute border-2 border-red-500 rounded-lg animate-pulse"
+                key={`found-original-${found.id}`}
+                className="absolute border-4 border-green-500 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
                 style={{
-                  top: `${diff.box_2d[0] / 10}%`,
-                  left: `${diff.box_2d[1] / 10}%`,
-                  width: `${(diff.box_2d[3] - diff.box_2d[1]) / 10}%`,
-                  height: `${(diff.box_2d[2] - diff.box_2d[0]) / 10}%`
+                  top: `${found.box_2d[0] / 10}%`,
+                  left: `${found.box_2d[1] / 10}%`,
+                  width: `${(found.box_2d[3] - found.box_2d[1]) / 10}%`,
+                  height: `${(found.box_2d[2] - found.box_2d[0]) / 10}%`,
                 }}
               >
-                <div className="absolute -top-3 -right-3 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
-                  {diff.id}
+                <div className="absolute -top-3 -right-3 w-7 h-7 bg-green-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-bounce">
+                  {found.id}
                 </div>
               </div>
             ))}
+            {gameOver && !revealing && !isHovering && differences.map(diff => {
+              // Check if user found this difference (by clicking OR typing)
+              const foundByClick = foundIds.includes(diff.id);
+              const foundByTyping = foundItems.some(item =>
+                item.toLowerCase().includes(diff.description.toLowerCase()) ||
+                diff.description.toLowerCase().includes(item.toLowerCase())
+              );
+              const wasFound = foundByClick || foundByTyping;
+
+              // GREEN if found (by any method), RED if missed
+              const borderColor = wasFound ? 'border-green-600' : 'border-red-600';
+              const bgColor = wasFound ? 'bg-green-600' : 'bg-red-600';
+
+              return (
+                <div
+                  key={diff.id}
+                  className={`absolute border-2 ${borderColor} rounded-lg animate-pulse`}
+                  style={{
+                    top: `${diff.box_2d[0] / 10}%`,
+                    left: `${diff.box_2d[1] / 10}%`,
+                    width: `${(diff.box_2d[3] - diff.box_2d[1]) / 10}%`,
+                    height: `${(diff.box_2d[2] - diff.box_2d[0]) / 10}%`
+                  }}
+                >
+                  <div className={`absolute -top-3 -right-3 w-6 h-6 ${bgColor} text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg`}>
+                    {diff.id}
+                  </div>
+                </div>
+              );
+            })}
           </div>
           <div className="relative rounded-lg overflow-hidden border border-zinc-200 shadow-sm bg-white">
             <img
               src={`data:image/png;base64,${images.modified}`}
               alt="Modified"
-              className={`${imgMaxHeight} w-auto pointer-events-none select-none`}
+              className={`${imgMaxHeight} w-auto select-none cursor-crosshair`}
+              onClick={handleImageClick}
+              style={{
+                pointerEvents: gameOver ? 'none' : 'auto'
+              }}
             />
-            {gameOver && !revealing && !isHovering && differences.map(diff => (
+            {/* Real-time green markers for found items during play */}
+            {!gameOver && gameAnswers.filter(a => foundIds.includes(a.id)).map(found => (
               <div
-                key={diff.id}
-                className="absolute border-2 border-green-600 rounded-lg animate-pulse"
+                key={`found-modified-${found.id}`}
+                className="absolute border-4 border-green-500 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
                 style={{
-                  top: `${diff.box_2d[0] / 10}%`,
-                  left: `${diff.box_2d[1] / 10}%`,
-                  width: `${(diff.box_2d[3] - diff.box_2d[1]) / 10}%`,
-                  height: `${(diff.box_2d[2] - diff.box_2d[0]) / 10}%`
+                  top: `${found.box_2d[0] / 10}%`,
+                  left: `${found.box_2d[1] / 10}%`,
+                  width: `${(found.box_2d[3] - found.box_2d[1]) / 10}%`,
+                  height: `${(found.box_2d[2] - found.box_2d[0]) / 10}%`,
                 }}
               >
-                <div className="absolute -top-3 -right-3 w-6 h-6 bg-green-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
-                  {diff.id}
+                <div className="absolute -top-3 -right-3 w-7 h-7 bg-green-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-bounce">
+                  {found.id}
                 </div>
               </div>
             ))}
+            {gameOver && !revealing && !isHovering && differences.map(diff => {
+              // Check if user found this difference (by clicking OR typing)
+              const foundByClick = foundIds.includes(diff.id);
+              const foundByTyping = foundItems.some(item =>
+                item.toLowerCase().includes(diff.description.toLowerCase()) ||
+                diff.description.toLowerCase().includes(item.toLowerCase())
+              );
+              const wasFound = foundByClick || foundByTyping;
+
+              // GREEN if found (by any method), RED if missed
+              const borderColor = wasFound ? 'border-green-600' : 'border-red-600';
+              const bgColor = wasFound ? 'bg-green-600' : 'bg-red-600';
+
+              return (
+                <div
+                  key={diff.id}
+                  className={`absolute border-2 ${borderColor} rounded-lg animate-pulse`}
+                  style={{
+                    top: `${diff.box_2d[0] / 10}%`,
+                    left: `${diff.box_2d[1] / 10}%`,
+                    width: `${(diff.box_2d[3] - diff.box_2d[1]) / 10}%`,
+                    height: `${(diff.box_2d[2] - diff.box_2d[0]) / 10}%`
+                  }}
+                >
+                  <div className={`absolute -top-3 -right-3 w-6 h-6 ${bgColor} text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg`}>
+                    {diff.id}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : singleImage ? (
@@ -153,24 +302,59 @@ export default function GameArea({
             <img
               src={`data:image/png;base64,${singleImage}`}
               alt="What is wrong?"
-              className={`${imgMaxHeight} w-auto pointer-events-none select-none`}
+              className={`${imgMaxHeight} w-auto select-none cursor-crosshair`}
+              onClick={handleImageClick}
+              style={{
+                pointerEvents: gameOver ? 'none' : 'auto'
+              }}
             />
-            {gameOver && !revealing && !isHovering && differences.map(diff => (
+            {/* Real-time green markers for found items during play */}
+            {!gameOver && gameAnswers.filter(a => foundIds.includes(a.id)).map(found => (
               <div
-                key={diff.id}
-                className="absolute border-2 border-amber-500 rounded-lg animate-pulse"
+                key={`found-single-${found.id}`}
+                className="absolute border-4 border-green-500 rounded-full shadow-[0_0_20px_rgba(34,197,94,0.6)] pointer-events-none animate-in zoom-in-95 duration-300"
                 style={{
-                  top: `${diff.box_2d[0] / 10}%`,
-                  left: `${diff.box_2d[1] / 10}%`,
-                  width: `${(diff.box_2d[3] - diff.box_2d[1]) / 10}%`,
-                  height: `${(diff.box_2d[2] - diff.box_2d[0]) / 10}%`
+                  top: `${found.box_2d[0] / 10}%`,
+                  left: `${found.box_2d[1] / 10}%`,
+                  width: `${(found.box_2d[3] - found.box_2d[1]) / 10}%`,
+                  height: `${(found.box_2d[2] - found.box_2d[0]) / 10}%`,
                 }}
               >
-                <div className="absolute -top-3 -right-3 w-6 h-6 bg-amber-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg">
-                  {diff.id}
+                <div className="absolute -top-3 -right-3 w-7 h-7 bg-green-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg border-2 border-white animate-bounce">
+                  {found.id}
                 </div>
               </div>
             ))}
+            {gameOver && !revealing && !isHovering && differences.map(diff => {
+              // Check if user found this error (by clicking OR typing)
+              const foundByClick = foundIds.includes(diff.id);
+              const foundByTyping = foundItems.some(item =>
+                item.toLowerCase().includes(diff.description.toLowerCase()) ||
+                diff.description.toLowerCase().includes(item.toLowerCase())
+              );
+              const wasFound = foundByClick || foundByTyping;
+
+              // GREEN if found (by any method), RED if missed
+              const borderColor = wasFound ? 'border-green-600' : 'border-red-600';
+              const bgColor = wasFound ? 'bg-green-600' : 'bg-red-600';
+
+              return (
+                <div
+                  key={diff.id}
+                  className={`absolute border-2 ${borderColor} rounded-lg animate-pulse`}
+                  style={{
+                    top: `${diff.box_2d[0] / 10}%`,
+                    left: `${diff.box_2d[1] / 10}%`,
+                    width: `${(diff.box_2d[3] - diff.box_2d[1]) / 10}%`,
+                    height: `${(diff.box_2d[2] - diff.box_2d[0]) / 10}%`
+                  }}
+                >
+                  <div className={`absolute -top-3 -right-3 w-6 h-6 ${bgColor} text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg`}>
+                    {diff.id}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : null}
@@ -247,6 +431,15 @@ export default function GameArea({
               <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none z-10">
                 <div className="bg-zinc-900/80 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full backdrop-blur-sm animate-bounce">
                   Hover to reveal image
+                </div>
+              </div>
+            )}
+
+            {/* Click Hint for DIFF/WRONG modes */}
+            {!gameOver && (gameMode === 'DIFF' || gameMode === 'WRONG') && showClickHint && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none z-10 animate-in fade-in duration-500">
+                <div className="bg-blue-600/90 text-white text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full backdrop-blur-sm animate-pulse shadow-lg">
+                  {gameMode === 'DIFF' ? '💡 Click on LEFT image to find differences' : '💡 Click on image to find errors'}
                 </div>
               </div>
             )}
@@ -336,23 +529,40 @@ export default function GameArea({
                       No results to display
                     </p>
                   ) : (
-                    differences.map((diff, index) => (
-                      <div
-                        key={diff.id}
-                        className="flex gap-4 items-start p-4 bg-white rounded-xl border border-zinc-100 shadow-sm hover:shadow-md transition-shadow"
-                      >
-                        <span
-                          className={`w-8 h-8 shrink-0 ${
-                            COLOR_PALETTE[index % COLOR_PALETTE.length]
-                          } text-white rounded-lg flex items-center justify-center text-sm font-bold shadow-sm`}
+                    differences.map((diff, index) => {
+                      // Check if user found this difference (by clicking OR typing)
+                      const foundByClick = foundIds.includes(diff.id);
+                      const foundByTyping = foundItems.some(item =>
+                        item.toLowerCase().includes(diff.description.toLowerCase()) ||
+                        diff.description.toLowerCase().includes(item.toLowerCase())
+                      );
+                      const wasFound = foundByClick || foundByTyping;
+
+                      return (
+                        <div
+                          key={diff.id}
+                          className={`flex gap-3 items-start p-3 rounded-lg border transition-all ${
+                            wasFound
+                              ? 'bg-green-50 border-green-200'
+                              : 'bg-red-50 border-red-200'
+                          }`}
                         >
-                          {diff.id}
-                        </span>
-                        <p className="text-sm leading-relaxed text-zinc-600 font-medium">
-                          {diff.description}
-                        </p>
-                      </div>
-                    ))
+                          {/* Number badge with color */}
+                          <span className={`w-5 h-5 ${
+                            wasFound ? 'bg-green-600' : 'bg-red-600'
+                          } text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5`}>
+                            {diff.id}
+                          </span>
+
+                          {/* Description text with color */}
+                          <p className={`text-[11px] leading-relaxed font-medium ${
+                            wasFound ? 'text-green-700' : 'text-red-700'
+                          }`}>
+                            {wasFound ? '✓' : '✗'} {diff.description}
+                          </p>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               )}

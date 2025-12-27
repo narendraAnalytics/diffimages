@@ -68,6 +68,11 @@ export default function DashboardPage() {
   const [revealing, setRevealing] = useState(false);
   const [logicSolution, setLogicSolution] = useState<string | null>(null);
 
+  // Click-to-Find Feature
+  const [gameAnswers, setGameAnswers] = useState<Difference[]>([]);  // Pre-fetched bounding boxes
+  const [foundIds, setFoundIds] = useState<number[]>([]);             // IDs found via clicking
+  const [livePoints, setLivePoints] = useState<{value: number, id: number} | null>(null); // Live points animation
+
   // UI State
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -91,6 +96,63 @@ export default function DashboardPage() {
 
   const playBeeps = (count: number) => {
     beepGeneratorRef.current?.playBeeps(count);
+  };
+
+  // Show live points animation
+  const showLivePoints = (points: number) => {
+    const id = Date.now();
+    setLivePoints({ value: points, id });
+
+    // Auto-hide after 2 seconds
+    setTimeout(() => {
+      setLivePoints(prev => prev?.id === id ? null : prev);
+    }, 2000);
+  };
+
+  // Handle image click (for click-to-find feature)
+  const handleImageClick = (clickId: number, description: string) => {
+    if (clickId > 0) {
+      // Correct click
+      beepGeneratorRef.current?.playSuccessChime(); // 3-tone success sound
+
+      const points = gameMode === 'DIFF' ? 1 : 2; // Same as typing
+      setScore(s => s + points);
+      setFoundIds(prev => [...prev, clickId]);
+      setFeedback({
+        type: 'success',
+        message: `✓ Found: ${description} (+${points} points)`
+      });
+
+      // Show live points animation
+      showLivePoints(points);
+
+      // Check if all found (click-based completion)
+      if (foundIds.length + 1 >= gameAnswers.length) {
+        setFeedback({
+          type: 'success',
+          message: 'Amazing! You found everything!'
+        });
+        handleTimeout(); // End game
+      }
+    } else if (clickId === -1) {
+      // Already found
+      setFeedback({ type: 'info', message: description });
+    } else {
+      // Wrong click (clickId === -2)
+      beepGeneratorRef.current?.playBeep(400, 100, 0.2); // Short error beep
+
+      // Penalty for wrong click
+      const penalty = gameMode === 'DIFF' ? -1 : -2; // Lose points for wrong guess
+      setScore(s => Math.max(0, s + penalty)); // Don't go below 0
+
+      setFeedback({
+        type: 'error',
+        message: `✗ ${description} (${penalty} points)`
+      });
+
+      // Show live points animation (negative)
+      showLivePoints(penalty);
+    }
   };
 
   // Auto-hide scroll notification after 4 seconds
@@ -260,12 +322,18 @@ export default function DashboardPage() {
         ? awardRetroactivePoints(foundItems, revealedDifferences, gameMode)
         : 0);
 
+      // Merge foundIds into foundItems for database storage
+      const clickedItems = foundIds.map(id => {
+        const answer = gameAnswers.find(a => a.id === id);
+        return `[Click] ${answer?.description || 'Unknown'}`;
+      });
+
       // Save to database
       await saveGameSession({
         gameMode,
         subject: currentSubject,
         score: finalScore, // Use calculated final score
-        foundItems,
+        foundItems: [...foundItems, ...clickedItems], // Merge both click and text answers
         timeRemaining: timer,
         completionStatus: 'timeout',
         logicQuestion: logicGame?.question,
@@ -304,11 +372,29 @@ export default function DashboardPage() {
         setCurrentSubject(topic);
         const data = await generateDiffGame(topic);
         setImages(data);
+
+        // Pre-fetch bounding box answers for click detection
+        try {
+          const answers = await getDifferences(data.original, data.modified);
+          setGameAnswers(answers);
+        } catch (e) {
+          console.error('Failed to pre-fetch answers:', e);
+          setGameAnswers([]); // Graceful degradation - typing still works
+        }
       } else if (gameMode === 'WRONG') {
         if (!topic) topic = RANDOM_THEMES[Math.floor(Math.random() * RANDOM_THEMES.length)];
         setCurrentSubject(topic);
         const data = await generateWrongGame(topic);
         setSingleImage(data.image);
+
+        // Pre-fetch bounding box answers for click detection
+        try {
+          const errors = await getErrors(data.image);
+          setGameAnswers(errors);
+        } catch (e) {
+          console.error('Failed to pre-fetch errors:', e);
+          setGameAnswers([]);
+        }
       } else {
         setCurrentSubject(topic || 'Logic Puzzle');
         const data = await generateLogicGame(topic);
@@ -502,12 +588,18 @@ export default function DashboardPage() {
         setLogicSolution(cleanText(logicGame.solution));
       }
 
+      // Merge foundIds into foundItems for database storage
+      const clickedItems = foundIds.map(id => {
+        const answer = gameAnswers.find(a => a.id === id);
+        return `[Click] ${answer?.description || 'Unknown'}`;
+      });
+
       // Save to database with given_up status
       await saveGameSession({
         gameMode,
         subject: currentSubject,
         score,
-        foundItems,
+        foundItems: [...foundItems, ...clickedItems], // Merge both click and text answers
         timeRemaining: timer,
         completionStatus: 'given_up',
         logicQuestion: logicGame?.question,
@@ -534,10 +626,22 @@ export default function DashboardPage() {
     setLogicSolution(null);
     setFeedback(null);
     setTimer(TIMER_DURATION);
+    setGameAnswers([]);
+    setFoundIds([]);
+    setLivePoints(null);
   };
 
   return (
     <>
+      {/* Live points animation - appears near score */}
+      {livePoints && (
+        <div className={`fixed top-24 right-8 z-50 text-4xl font-bold animate-in zoom-in-95 fade-in duration-300 ${
+          livePoints.value > 0 ? 'text-green-500' : 'text-red-500'
+        }`}>
+          {livePoints.value > 0 ? '+' : ''}{livePoints.value}
+        </div>
+      )}
+
       <DashboardHeader
         timer={timer}
         timerZone={timerZone}
@@ -577,6 +681,10 @@ export default function DashboardPage() {
             differences={differences}
             logicSolution={logicSolution}
             onPlayAgain={handlePlayAgain}
+            gameAnswers={gameAnswers}
+            foundIds={foundIds}
+            foundItems={foundItems}
+            onImageClick={handleImageClick}
           />
         </div>
 

@@ -39,6 +39,35 @@ export class BeepGenerator {
     }
   }
 
+  /**
+   * Play a success chime (3-tone ascending melody)
+   * Used when user clicks correct difference
+   */
+  playSuccessChime(): void {
+    if (!this.audioContext) return;
+
+    // Three ascending tones: 600Hz, 800Hz, 1000Hz
+    const frequencies = [600, 800, 1000];
+    frequencies.forEach((freq, i) => {
+      setTimeout(() => {
+        this.playBeep(freq, 150, 0.25); // 150ms duration, 25% volume
+      }, i * 100); // Stagger by 100ms
+    });
+  }
+
+  /**
+   * Play a single click sound
+   * @param success - true for high pitch, false for low error pitch
+   */
+  playClickSound(success: boolean = false): void {
+    if (!this.audioContext) return;
+
+    const frequency = success ? 1200 : 400; // High for success, low for error
+    const duration = success ? 200 : 100;   // Longer for success
+
+    this.playBeep(frequency, duration, 0.2); // 20% volume
+  }
+
   destroy() {
     if (this.audioContext) {
       this.audioContext.close();
