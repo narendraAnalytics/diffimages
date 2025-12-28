@@ -274,6 +274,39 @@
     animation: scale-in 0.5s ease-out forwards;
   }
 
+  /* Wave animation for section separator */
+  @keyframes wave-flow {
+    0% {
+      transform: translateX(0) translateY(0);
+    }
+    50% {
+      transform: translateX(-25%) translateY(-3px);
+    }
+    100% {
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  @keyframes wave-flow-reverse {
+    0% {
+      transform: translateX(0) translateY(0);
+    }
+    50% {
+      transform: translateX(25%) translateY(3px);
+    }
+    100% {
+      transform: translateX(50%) translateY(0);
+    }
+  }
+
+  .animate-wave-flow {
+    animation: wave-flow 20s linear infinite;
+  }
+
+  .animate-wave-flow-reverse {
+    animation: wave-flow-reverse 15s linear infinite;
+  }
+
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .animate-dance,
@@ -286,7 +319,9 @@
     .animate-bounce-gentle,
     .animate-sound-wave,
     .animate-chart-draw,
-    .animate-scale-in {
+    .animate-scale-in,
+    .animate-wave-flow,
+    .animate-wave-flow-reverse {
       animation: none;
     }
   }

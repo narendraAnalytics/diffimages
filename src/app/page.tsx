@@ -1,6 +1,7 @@
 import Navbar from "@/components/navbar";
 import HeroSection from "@/components/hero-section";
 import HowItWorksSection from "@/components/how-it-works-section";
+import SectionSeparator from "@/components/section-separator";
 import FeaturesSection from "@/components/features-section";
 
 export default function Home() {
@@ -16,6 +17,9 @@ export default function Home() {
       <main className="relative z-10">
         {/* How It Works Section */}
         <HowItWorksSection />
+
+        {/* Animated Wave Separator */}
+        <SectionSeparator />
 
         {/* Features Section */}
         <FeaturesSection />
