@@ -4,6 +4,8 @@ import HowItWorksSection from "@/components/how-it-works-section";
 import SectionSeparator from "@/components/section-separator";
 import FeaturesSection from "@/components/features-section";
 import AboutSection from "@/components/about-section";
+import ContactSection from "@/components/contact-section";
+import Footer from "@/components/footer";
 
 export default function Home() {
   return (
@@ -31,8 +33,15 @@ export default function Home() {
         {/* About Section - Previous Projects Gallery */}
         <AboutSection />
 
-        {/* Future content sections */}
+        {/* Animated Wave Separator */}
+        <SectionSeparator />
+
+        {/* Contact Section */}
+        <ContactSection />
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

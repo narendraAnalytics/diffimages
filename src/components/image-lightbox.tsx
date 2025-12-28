@@ -65,7 +65,7 @@ export default function ImageLightbox({
         <DialogOverlay className="fixed inset-0 bg-black/90 z-60 lightbox-overlay" />
 
         {/* Content */}
-        <div className="fixed inset-0 z-60 flex items-start justify-center p-4 md:p-8 pt-8 md:pt-12">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 md:p-8">
           {/* Close button - Fixed to viewport */}
           <button
             onClick={onClose}
@@ -108,10 +108,10 @@ export default function ImageLightbox({
             <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-white" />
           </button>
 
-          {/* Content container - no scrolling needed, everything fits */}
-          <div className="lightbox-content relative w-full max-w-6xl flex flex-col items-center justify-start py-4 px-4">
+          {/* Content container - centered, no scrolling needed */}
+          <div className="lightbox-content relative w-full max-w-6xl flex flex-col items-center justify-center py-4 px-4">
             {/* Image container */}
-            <div className="relative w-full max-w-4xl max-h-[20vh] mb-4">
+            <div className="relative w-full max-w-4xl max-h-[95vh] mb-4">
               <div className="relative w-full h-auto aspect-[4/3] rounded-lg overflow-hidden bg-black">
                 <Image
                   src={currentItem.image}
@@ -124,7 +124,7 @@ export default function ImageLightbox({
               </div>
 
               {/* Image counter */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2
+              <div className="absolute bottom-65 left-1/2 -translate-x-1/2
                               px-4 py-2 rounded-full bg-black/60 backdrop-blur-md">
                 <p className="text-sm text-white font-medium">
                   {currentIndex + 1} / {items.length}
