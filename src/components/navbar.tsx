@@ -15,8 +15,8 @@ import {
   Layers,
   Sparkles,
   LayoutGrid,
-  DollarSign,
-  Info,
+  Projector,
+  Mail,
   Menu,
 } from "lucide-react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
@@ -72,9 +72,9 @@ export default function Navbar() {
       tooltipGradientTo: "to-rose-500"
     },
     {
-      name: "Pricing",
-      href: "#pricing",
-      icon: DollarSign,
+      name: "About",
+      href: "#about",
+      icon: Projector,
       defaultColor: "text-green-500",
       hoverGradient: "group-hover:bg-linear-to-r group-hover:from-green-500 group-hover:to-emerald-500",
       hoverShadow: "hover:shadow-lg hover:shadow-green-500/50",
@@ -82,9 +82,9 @@ export default function Navbar() {
       tooltipGradientTo: "to-emerald-500"
     },
     {
-      name: "About",
-      href: "#about",
-      icon: Info,
+      name: "Contact",
+      href: "#contact",
+      icon: Mail,
       defaultColor: "text-indigo-500",
       hoverGradient: "group-hover:bg-linear-to-r group-hover:from-indigo-500 group-hover:to-blue-500",
       hoverShadow: "hover:shadow-lg hover:shadow-indigo-500/50",
