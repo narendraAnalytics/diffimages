@@ -419,6 +419,20 @@
     animation: lightbox-zoom-in 0.3s ease-out;
   }
 
+  /* Circular orbit animation for star icon hover */
+  @keyframes orbit {
+    0% {
+      transform: rotate(0deg) translateX(3px) rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg) translateX(3px) rotate(-360deg);
+    }
+  }
+
+  .animate-orbit {
+    animation: orbit 2s ease-in-out infinite;
+  }
+
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .animate-dance,
@@ -437,7 +451,8 @@
     .polaroid-card,
     .lightbox-overlay,
     .lightbox-content,
-    .animate-breeze {
+    .animate-breeze,
+    .animate-orbit {
       animation: none;
     }
   }

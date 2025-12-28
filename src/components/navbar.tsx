@@ -142,7 +142,17 @@ export default function Navbar() {
 
                 {/* Decorative Icon after "How It Works" */}
                 {item.name === "How It Works" && (
-                  <Sparkles className="w-6 h-6 text-orange-400/60 animate-pulse" />
+                  <Tooltip
+                    text="Click Here"
+                    gradientFrom="from-orange-500"
+                    gradientTo="to-pink-500"
+                  >
+                    <div className="cursor-pointer group">
+                      <Sparkles className="w-6 h-6 text-orange-400/60 animate-pulse
+                                           group-hover:animate-spin transition-transform
+                                           group-hover:scale-110" />
+                    </div>
+                  </Tooltip>
                 )}
               </div>
             );
