@@ -232,6 +232,48 @@
     animation: bounce-gentle 2s ease-in-out infinite;
   }
 
+  /* Sound wave animation for voice feature */
+  @keyframes sound-wave {
+    0%, 100% { height: 20%; }
+    50% { height: 100%; }
+  }
+
+  .animate-sound-wave {
+    animation: sound-wave 0.8s ease-in-out infinite;
+  }
+
+  /* Chart drawing animation for progress feature */
+  @keyframes chart-draw {
+    from {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+    }
+    to {
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .animate-chart-draw {
+    animation: chart-draw 2s ease-out forwards;
+  }
+
+  /* Scale in animation for chart points */
+  @keyframes scale-in {
+    from {
+      transform: scale(0);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.5s ease-out forwards;
+  }
+
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .animate-dance,
@@ -241,7 +283,10 @@
     .animate-float,
     .animate-wiggle,
     .animate-breathe,
-    .animate-bounce-gentle {
+    .animate-bounce-gentle,
+    .animate-sound-wave,
+    .animate-chart-draw,
+    .animate-scale-in {
       animation: none;
     }
   }

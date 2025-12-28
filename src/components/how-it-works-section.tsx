@@ -184,7 +184,7 @@ export default function HowItWorksSection() {
                   </div>
 
                   {/* Title */}
-                  <h3 className={`text-xl md:text-2xl font-bold mb-3 bg-gradient-to-r ${mode.gradient} bg-clip-text text-transparent`}>
+                  <h3 className={`text-xl md:text-2xl font-bold mb-3 bg-linear-to-r ${mode.gradient} bg-clip-text text-transparent`}>
                     {mode.title}
                   </h3>
 
@@ -197,7 +197,7 @@ export default function HowItWorksSection() {
                   <ul className="space-y-2">
                     {mode.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-2 text-sm text-zinc-500">
-                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                         <span>{feature}</span>
                       </li>
                     ))}
