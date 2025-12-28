@@ -22,14 +22,9 @@ import {
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
-  const [isScrollingDown, setIsScrollingDown] = useState(false);
   const [isTransparent, setIsTransparent] = useState(true);
-  const [isMounted, setIsMounted] = useState(false);
-  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
-    setIsMounted(true);
-
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
 
@@ -39,14 +34,6 @@ export default function Navbar() {
       } else {
         setIsTransparent(true);
       }
-
-      if (currentScrollY > lastScrollYRef.current && currentScrollY > 50) {
-        setIsScrollingDown(true);
-      } else {
-        setIsScrollingDown(false);
-      }
-
-      lastScrollYRef.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -108,10 +95,7 @@ export default function Navbar() {
 
   return (
     <nav
-      suppressHydrationWarning
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out ${
-        isMounted && isScrollingDown ? "-translate-y-full" : "translate-y-0"
-      } ${
         isTransparent
           ? "bg-transparent"
           : "bg-linear-to-br from-orange-50/95 via-yellow-50/95 to-pink-50/95 backdrop-blur-md"
@@ -188,8 +172,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Menu */}
-        {isMounted && (
-          <Sheet>
+        <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
@@ -252,7 +235,6 @@ export default function Navbar() {
               </nav>
             </SheetContent>
           </Sheet>
-        )}
       </div>
     </nav>
   );

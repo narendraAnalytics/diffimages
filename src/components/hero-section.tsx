@@ -114,7 +114,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative w-full h-screen overflow-hidden">
+    <section id="home" className="relative w-full h-screen overflow-hidden">
       {/* Dual Video Background System */}
       <div className="absolute inset-0 w-full h-full">
         {/* Active Video */}
