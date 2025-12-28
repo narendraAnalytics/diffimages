@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
-import { Mail, Sparkles, Send } from 'lucide-react';
+import { Mail, Sparkles, Send, Linkedin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -173,7 +173,25 @@ export default function ContactSection() {
                   <h4 className="font-semibold text-zinc-800 mb-1">Email</h4>
                   <a href="mailto:contact@quickspot.com"
                      className="text-zinc-600 hover:text-blue-500 transition-colors">
-                    contact@quickspot.com
+                    narendra.insights@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              {/* LinkedIn */}
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full
+                              bg-gradient-to-r from-blue-500 to-purple-500
+                              flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Linkedin className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-zinc-800 mb-1">LinkedIn</h4>
+                  <a href="https://www.linkedin.com/in/nk-analytics"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="text-zinc-600 hover:text-blue-500 transition-colors">
+                    linkedin.com/in/nk-analytics
                   </a>
                 </div>
               </div>

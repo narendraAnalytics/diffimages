@@ -17,7 +17,7 @@ export default function Footer() {
   const socialLinks = [
     { name: 'GitHub', icon: Github, href: '#' },
     { name: 'Twitter', icon: Twitter, href: '#' },
-    { name: 'LinkedIn', icon: Linkedin, href: '#' },
+    { name: 'LinkedIn', icon: Linkedin, href: 'https://www.linkedin.com/in/nk-analytics' },
     { name: 'Email', icon: Mail, href: 'mailto:contact@quickspot.com' },
   ];
 
