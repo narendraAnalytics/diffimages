@@ -3,6 +3,7 @@ import HeroSection from "@/components/hero-section";
 import HowItWorksSection from "@/components/how-it-works-section";
 import SectionSeparator from "@/components/section-separator";
 import FeaturesSection from "@/components/features-section";
+import AboutSection from "@/components/about-section";
 
 export default function Home() {
   return (
@@ -23,6 +24,12 @@ export default function Home() {
 
         {/* Features Section */}
         <FeaturesSection />
+
+        {/* Animated Wave Separator */}
+        <SectionSeparator />
+
+        {/* About Section - Previous Projects Gallery */}
+        <AboutSection />
 
         {/* Future content sections */}
       </main>

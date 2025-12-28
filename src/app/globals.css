@@ -307,6 +307,88 @@
     animation: wave-flow-reverse 15s linear infinite;
   }
 
+  /* Polaroid gallery animations for About section */
+  @keyframes polaroid-drop {
+    from {
+      transform: translateY(-100px) rotate(var(--rotation));
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0) rotate(var(--rotation));
+      opacity: 1;
+    }
+  }
+
+  .polaroid-card {
+    animation: polaroid-drop 0.6s ease-out forwards;
+  }
+
+  /* Clothespin decoration using pseudo-elements */
+  .clothespin::before,
+  .clothespin::after {
+    content: '';
+    position: absolute;
+    top: -12px;
+    width: 8px;
+    height: 24px;
+    background: linear-gradient(135deg, #8b6f47 0%, #a08967 50%, #8b6f47 100%);
+    border-radius: 4px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .clothespin::before {
+    left: 50%;
+    transform: translateX(-12px) rotate(-15deg);
+  }
+
+  .clothespin::after {
+    left: 50%;
+    transform: translateX(4px) rotate(15deg);
+  }
+
+  /* Hanging wire across section */
+  .hanging-wire::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      #a0a0a0 5%,
+      #c0c0c0 50%,
+      #a0a0a0 95%,
+      transparent 100%
+    );
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Lightbox animations */
+  @keyframes lightbox-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes lightbox-zoom-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .lightbox-overlay {
+    animation: lightbox-fade-in 0.2s ease-out;
+  }
+
+  .lightbox-content {
+    animation: lightbox-zoom-in 0.3s ease-out;
+  }
+
   /* Respect reduced motion preferences */
   @media (prefers-reduced-motion: reduce) {
     .animate-dance,
@@ -321,7 +403,10 @@
     .animate-chart-draw,
     .animate-scale-in,
     .animate-wave-flow,
-    .animate-wave-flow-reverse {
+    .animate-wave-flow-reverse,
+    .polaroid-card,
+    .lightbox-overlay,
+    .lightbox-content {
       animation: none;
     }
   }
