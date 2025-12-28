@@ -14,13 +14,13 @@ interface InfographicItem {
   animationDelay: number;
 }
 
-// Infographics data - all 8 projects
+// Infographics data - all 8 projects with live demo URLs
 const infographics: InfographicItem[] = [
   {
     id: 'content-ai',
     title: 'Content AI Generation',
     image: '/infographics/contentaigeneration.png',
-    demoUrl: null, // User will add later
+    demoUrl: 'https://cotentaigeneration.vercel.app/',
     rotation: -2,
     animationDelay: 0
   },
@@ -28,7 +28,7 @@ const infographics: InfographicItem[] = [
     id: 'india-trade',
     title: 'India Trade Analysis',
     image: '/infographics/IndiaTradeAnalysis.png',
-    demoUrl: null,
+    demoUrl: 'https://tradeanalysis-azure.vercel.app/',
     rotation: 1,
     animationDelay: 100
   },
@@ -36,7 +36,7 @@ const infographics: InfographicItem[] = [
     id: 'ai-agent',
     title: 'Professional AI Agent',
     image: '/infographics/ProfessionalAIAgent.png',
-    demoUrl: null,
+    demoUrl: 'https://aiagent-ten-nu.vercel.app/',
     rotation: -1,
     animationDelay: 200
   },
@@ -44,7 +44,7 @@ const infographics: InfographicItem[] = [
     id: 'photo-shoot',
     title: 'Professional Photo Shoot',
     image: '/infographics/ProfessionalPhotoShoot.png',
-    demoUrl: null,
+    demoUrl: 'https://professional-life-style-shoot.vercel.app/',
     rotation: 2,
     animationDelay: 300
   },
@@ -52,7 +52,7 @@ const infographics: InfographicItem[] = [
     id: 'read-with-me',
     title: 'Read With ME',
     image: '/infographics/ReadWithME.png',
-    demoUrl: null,
+    demoUrl: 'https://readwithme.expo.app/',
     rotation: -2,
     animationDelay: 400
   },
@@ -60,7 +60,7 @@ const infographics: InfographicItem[] = [
     id: 'real-estate',
     title: 'Real Estate Investment',
     image: '/infographics/Real Estate Investment.png',
-    demoUrl: null,
+    demoUrl: 'https://estate-ai-india.vercel.app/',
     rotation: 1,
     animationDelay: 500
   },
@@ -68,7 +68,7 @@ const infographics: InfographicItem[] = [
     id: 'snapcook',
     title: 'SnapCook',
     image: '/infographics/snapcook.png',
-    demoUrl: null,
+    demoUrl: 'https://snapcook-psi.vercel.app/',
     rotation: -1,
     animationDelay: 600
   },
@@ -76,7 +76,7 @@ const infographics: InfographicItem[] = [
     id: 'stepwise',
     title: 'StepWise',
     image: '/infographics/stepwise.png',
-    demoUrl: null,
+    demoUrl: 'https://stepwise-gules.vercel.app/',
     rotation: 2,
     animationDelay: 700
   }
