@@ -30,15 +30,15 @@ export default function PolaroidCard({ item, onClick }: PolaroidCardProps) {
       {/* Clothespin decoration */}
       <div className="clothespin" />
 
-      {/* Polaroid frame */}
+      {/* Polaroid frame - Reduced height for more compact look */}
       <div
-        className="polaroid-card bg-white p-3 pb-12 rounded-2xl shadow-lg
+        className="polaroid-card bg-white p-2.5 pb-8 rounded-2xl shadow-lg
                    hover:shadow-2xl hover:scale-105 hover:rotate-0
                    transition-all duration-300 ease-out"
         style={{ transform: `rotate(${item.rotation}deg)` }}
       >
-        {/* Image container with fixed aspect ratio */}
-        <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-gray-100">
+        {/* Image container with shorter aspect ratio (3:2 instead of 4:3) */}
+        <div className="relative w-full aspect-[3/2] rounded-lg overflow-hidden bg-gray-100">
           <Image
             src={item.image}
             alt={item.title}
@@ -50,7 +50,7 @@ export default function PolaroidCard({ item, onClick }: PolaroidCardProps) {
         </div>
 
         {/* Title at bottom of polaroid */}
-        <div className="mt-3 text-center">
+        <div className="mt-2.5 text-center">
           <h3 className="text-sm font-medium text-gray-800 line-clamp-2">
             {item.title}
           </h3>
