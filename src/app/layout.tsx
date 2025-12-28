@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DiffGen - AI Powered Smart Games",
+  title: "QuickSpot - AI Powered Smart Games",
   description: "AI-powered Smart Games",
   icons: {
     icon: "/images/logo.png",

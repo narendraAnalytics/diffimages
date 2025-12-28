@@ -18,7 +18,7 @@ export default function Footer() {
     { name: 'GitHub', icon: Github, href: '#' },
     { name: 'Twitter', icon: Twitter, href: '#' },
     { name: 'LinkedIn', icon: Linkedin, href: '#' },
-    { name: 'Email', icon: Mail, href: 'mailto:contact@diffgen.com' },
+    { name: 'Email', icon: Mail, href: 'mailto:contact@quickspot.com' },
   ];
 
   return (
@@ -29,7 +29,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
-              DiffGen
+              QuickSpot
             </h3>
             <p className="text-zinc-400 mb-4 max-w-md">
               AI-powered difference detection and brain training platform.
@@ -100,11 +100,11 @@ export default function Footer() {
         {/* Bottom Section - Copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-zinc-400 text-sm text-center md:text-left">
-            © {currentYear} DiffGen. All rights reserved.
+            © {currentYear} QuickSpot. All rights reserved.
           </p>
 
           <p className="text-zinc-400 text-sm flex items-center gap-2">
-            Made with <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" /> by DiffGen Team
+            Made with <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" /> by QuickSpot Team
           </p>
         </div>
       </div>

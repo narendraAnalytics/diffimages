@@ -106,13 +106,13 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <Image
             src="/images/logo.png"
-            alt="DiffGen Logo"
+            alt="QuickSpot Logo"
             width={40}
             height={40}
             className="rounded-lg"
           />
           <span className="text-xl font-bold bg-linear-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent">
-            DiffGen
+            QuickSpot
           </span>
         </div>
 

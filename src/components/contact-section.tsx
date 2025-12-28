@@ -171,9 +171,9 @@ export default function ContactSection() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-zinc-800 mb-1">Email</h4>
-                  <a href="mailto:contact@diffgen.com"
+                  <a href="mailto:contact@quickspot.com"
                      className="text-zinc-600 hover:text-blue-500 transition-colors">
-                    contact@diffgen.com
+                    contact@quickspot.com
                   </a>
                 </div>
               </div>
