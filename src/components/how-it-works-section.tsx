@@ -148,8 +148,8 @@ export default function HowItWorksSection() {
         <div className="text-center mb-16 animate-on-scroll opacity-0 translate-y-8 transition-all duration-500">
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="relative">
-              <Brain className="w-12 h-12 text-orange-500" />
-              <Sparkles className="w-6 h-6 text-pink-500 absolute -top-1 -right-1 animate-pulse" />
+              <Brain className="w-12 h-12 text-orange-500 animate-breathe" />
+              <Sparkles className="w-6 h-6 text-pink-500 absolute -top-1 -right-1 animate-pulse animate-spin-slow" />
             </div>
           </div>
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
@@ -176,7 +176,11 @@ export default function HowItWorksSection() {
                 <CardContent className="p-0">
                   {/* Icon */}
                   <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${mode.gradient} p-3 mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-full h-full text-white" />
+                    <Icon className={`w-full h-full text-white ${
+                      mode.title === 'Spot the Difference' ? 'animate-float' :
+                      mode.title === "What's Wrong Here?" ? 'animate-wiggle' :
+                      'animate-breathe'
+                    }`} />
                   </div>
 
                   {/* Title */}
@@ -233,7 +237,7 @@ export default function HowItWorksSection() {
                         </div>
                       </div>
                       <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-r ${step.gradient} p-1.5 shadow-md`}>
-                        <StepIcon className="w-full h-full text-white" />
+                        <StepIcon className="w-full h-full text-white animate-bounce-gentle" />
                       </div>
                     </div>
 
@@ -273,7 +277,7 @@ export default function HowItWorksSection() {
                       </div>
                     </div>
                     <div className={`absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-gradient-to-r ${step.gradient} p-1.5 shadow-md`}>
-                      <StepIcon className="w-full h-full text-white" />
+                      <StepIcon className="w-full h-full text-white animate-bounce-gentle" />
                     </div>
                   </div>
 
@@ -307,7 +311,11 @@ export default function HowItWorksSection() {
                 >
                   {/* Icon */}
                   <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${benefit.gradient} p-3 mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <BenefitIcon className="w-full h-full text-white" />
+                    <BenefitIcon className={`w-full h-full text-white ${
+                      benefit.title === 'Powered by Google Gemini' ? 'animate-pulse' :
+                      benefit.title === 'Never the Same Twice' ? 'animate-spin-slow' :
+                      'animate-bounce-gentle'
+                    }`} />
                   </div>
 
                   {/* Title */}
