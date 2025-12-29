@@ -155,9 +155,9 @@ export default function HeroSection() {
       <div className="relative z-30 flex flex-col items-start justify-center h-full px-6 md:px-12 lg:px-24">
         <div className="max-w-2xl text-left mt-85">
           {/* Subtitle */}
-          <p className="text-lg md:text-xl lg:text-2xl text-gray-200 mb-8">
-            Transform your creative vision into reality with AI-powered
-            film production technology
+          <p className="text-lg md:text-xl lg:text-2xl bg-linear-to-r from-orange-400 to-pink-500 bg-clip-text text-transparent mb-8">
+            Train your brain and sharpen your focus with AI-powered
+            difference detection challenges and unlimited puzzles
           </p>
 
           {/* Welcome Button - Only shown when user is logged in */}
