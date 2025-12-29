@@ -98,6 +98,7 @@ diffimages/
 
 **Developer**: NK Analytics
 
+- **Live Demo**: [https://quickspot-nine.vercel.app/](https://quickspot-nine.vercel.app/)
 - **Email**: [narendra.insights@gmail.com](mailto:narendra.insights@gmail.com)
 - **LinkedIn**: [linkedin.com/in/nk-analytics](https://www.linkedin.com/in/nk-analytics)
 
