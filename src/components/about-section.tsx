@@ -131,7 +131,7 @@ export default function AboutSection() {
     <section
       ref={sectionRef}
       id="about"
-      className="relative w-full py-24 px-6 md:px-12 lg:px-24 bg-gradient-to-br from-green-50/30 via-emerald-50/20 to-teal-50/30 overflow-hidden"
+      className="relative w-full py-24 px-6 md:px-12 lg:px-24 bg-linear-to-r from-green-50/30 via-emerald-50/20 to-teal-50/30 overflow-hidden"
     >
       <div className="max-w-7xl mx-auto">
         {/* Section Header with Projector icon and gradient title */}
@@ -144,7 +144,7 @@ export default function AboutSection() {
           </div>
 
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            <span className="bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
               Our Previous Projects
             </span>
           </h2>

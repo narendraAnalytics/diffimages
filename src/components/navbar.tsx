@@ -23,6 +23,7 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   const [isTransparent, setIsTransparent] = useState(true);
+  const [iconsHidden, setIconsHidden] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -129,11 +130,7 @@ export default function Navbar() {
                 >
                   <a
                     href={item.href}
-                    className={`group relative flex items-center justify-center w-12 h-12 rounded-xl
-                      transition-all duration-300 ease-out
-                      hover:scale-110
-                      ${item.hoverGradient}
-                      ${item.hoverShadow}`}
+                    className={`group relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-500 ease-out hover:scale-110 ${item.hoverGradient} ${item.hoverShadow} ${iconsHidden ? 'opacity-0 scale-0 pointer-events-none' : 'opacity-100 scale-100'}`}
                     aria-label={item.name}
                   >
                     <Icon className={`w-6 h-6 ${item.defaultColor} group-hover:text-white transition-all duration-300 group-hover:scale-110`} />
@@ -147,7 +144,7 @@ export default function Navbar() {
                     gradientFrom="from-orange-500"
                     gradientTo="to-pink-500"
                   >
-                    <div className="cursor-pointer group">
+                    <div className="cursor-pointer group" onClick={() => setIconsHidden(!iconsHidden)}>
                       <Sparkles className="w-6 h-6 text-orange-400/60 animate-pulse group-hover:animate-spin transition-transform group-hover:scale-110" />
                     </div>
                   </Tooltip>

@@ -69,7 +69,7 @@ export default function ImageLightbox({
           {/* Close button - Fixed to viewport */}
           <button
             onClick={onClose}
-            className="fixed top-4 right-4 md:top-8 md:right-8 z-[70] w-12 h-12 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 flex items-center justify-center group"
+            className="fixed top-4 right-4 md:top-8 md:right-8 z-70 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition-all duration-300 flex items-center justify-center group"
             aria-label="Close lightbox"
           >
             <X className="w-6 h-6 text-white group-hover:text-orange-500 transition-colors" />
@@ -78,7 +78,7 @@ export default function ImageLightbox({
           {/* Previous button - Fixed to viewport */}
           <button
             onClick={() => onNavigate('prev')}
-            className="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
+            className="fixed left-4 md:left-8 top-1/2 -translate-y-1/2 z-70 w-12 h-12 md:w-14 md:h-14 rounded-full bg-linear-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
             aria-label="Previous image"
           >
             <ChevronLeft className="w-6 h-6 md:w-8 md:h-8 text-white" />
@@ -87,7 +87,7 @@ export default function ImageLightbox({
           {/* Next button - Fixed to viewport */}
           <button
             onClick={() => onNavigate('next')}
-            className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
+            className="fixed right-4 md:right-8 top-1/2 -translate-y-1/2 z-70 w-12 h-12 md:w-14 md:h-14 rounded-full bg-linear-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center group"
             aria-label="Next image"
           >
             <ChevronRight className="w-6 h-6 md:w-8 md:h-8 text-white" />
@@ -97,7 +97,7 @@ export default function ImageLightbox({
           <div className="lightbox-content relative w-full max-w-6xl flex flex-col items-center justify-center py-4 px-4">
             {/* Image container */}
             <div className="relative w-full max-w-4xl max-h-[95vh] mb-4">
-              <div className="relative w-full h-auto aspect-[4/3] rounded-lg overflow-hidden bg-black">
+              <div className="relative w-full h-auto aspect-4/3 rounded-lg overflow-hidden bg-black">
                 <Image
                   src={currentItem.image}
                   alt={currentItem.title}
@@ -125,7 +125,7 @@ export default function ImageLightbox({
           </div>
 
           {/* Keyboard shortcuts hint - Fixed to viewport */}
-          <div className="hidden md:flex fixed bottom-8 left-8 gap-4 text-white/60 text-sm z-[70]">
+          <div className="hidden md:flex fixed bottom-8 left-8 gap-4 text-white/60 text-sm z-70">
             <span>← → Navigate</span>
             <span>ESC Close</span>
           </div>

@@ -22,13 +22,13 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 text-white">
+    <footer className="relative w-full bg-linear-to-r from-zinc-900 via-zinc-800 to-zinc-900 text-white">
       <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-24 py-12">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Brand Section */}
           <div className="lg:col-span-2">
-            <h3 className="text-2xl font-bold mb-3 bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+            <h3 className="text-2xl font-bold mb-3 bg-linear-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
               QuickSpot
             </h3>
             <p className="text-zinc-400 mb-4 max-w-md">
@@ -44,7 +44,7 @@ export default function Footer() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full bg-zinc-700/50 hover:bg-gradient-to-r hover:from-orange-500 hover:to-pink-500 flex items-center justify-center transition-all duration-300 hover:scale-110"
+                  className="w-10 h-10 rounded-full bg-zinc-700/50 hover:bg-linear-to-r hover:from-orange-500 hover:to-pink-500 flex items-center justify-center transition-all duration-300 hover:scale-110"
                   aria-label={social.name}
                 >
                   <social.icon className="w-5 h-5" />

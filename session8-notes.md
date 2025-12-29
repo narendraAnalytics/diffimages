@@ -646,3 +646,6 @@ AboutSection (state management)
 *Last Updated: December 28, 2025*
 
 ---
+The issue was that className attributes with literal newlines (\r\n on Windows) cause React hydration mismatches because the server       
+  renders these strings differently than the client processes them. All classNames are now on single lines, which will eliminate the        
+  hydration error you were seeing in the console.
