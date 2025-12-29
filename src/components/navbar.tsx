@@ -148,9 +148,7 @@ export default function Navbar() {
                     gradientTo="to-pink-500"
                   >
                     <div className="cursor-pointer group">
-                      <Sparkles className="w-6 h-6 text-orange-400/60 animate-pulse
-                                           group-hover:animate-spin transition-transform
-                                           group-hover:scale-110" />
+                      <Sparkles className="w-6 h-6 text-orange-400/60 animate-pulse group-hover:animate-spin transition-transform group-hover:scale-110" />
                     </div>
                   </Tooltip>
                 )}

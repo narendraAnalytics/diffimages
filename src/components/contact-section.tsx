@@ -54,9 +54,7 @@ export default function ContactSection() {
     <section
       ref={sectionRef}
       id="contact"
-      className="relative w-full py-24 px-6 md:px-12 lg:px-24
-                 bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30
-                 overflow-hidden"
+      className="relative w-full py-24 px-6 md:px-12 lg:px-24 bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30 overflow-hidden"
     >
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
@@ -96,9 +94,7 @@ export default function ContactSection() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="John Doe"
                   required
-                  className="w-full px-4 py-3 rounded-lg border-2 border-zinc-200
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
-                           transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-zinc-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
                 />
               </div>
 
@@ -114,9 +110,7 @@ export default function ContactSection() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="john@example.com"
                   required
-                  className="w-full px-4 py-3 rounded-lg border-2 border-zinc-200
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
-                           transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-zinc-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300"
                 />
               </div>
 
@@ -132,9 +126,7 @@ export default function ContactSection() {
                   placeholder="Tell us about your project or inquiry..."
                   required
                   rows={6}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-zinc-200
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
-                           transition-all duration-300 resize-none"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-zinc-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 resize-none"
                 />
               </div>
 
@@ -142,12 +134,7 @@ export default function ContactSection() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-500
-                         hover:from-blue-600 hover:to-purple-600
-                         text-white font-semibold px-8 py-6 text-lg
-                         shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50
-                         hover:scale-105 transition-all duration-300
-                         flex items-center justify-center gap-2 rounded-lg"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold px-8 py-6 text-lg shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 rounded-lg"
               >
                 <Send className="w-5 h-5" />
                 {isSubmitting ? 'Sending...' : 'Send Message'}
@@ -164,9 +151,7 @@ export default function ContactSection() {
 
               {/* Email */}
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full
-                              bg-gradient-to-r from-blue-500 to-purple-500
-                              flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <Mail className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -180,9 +165,7 @@ export default function ContactSection() {
 
               {/* LinkedIn */}
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full
-                              bg-gradient-to-r from-blue-500 to-purple-500
-                              flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
                   <Linkedin className="w-6 h-6 text-white" />
                 </div>
                 <div>

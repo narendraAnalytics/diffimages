@@ -32,9 +32,7 @@ export default function PolaroidCard({ item, onClick }: PolaroidCardProps) {
 
       {/* Polaroid frame - Reduced height for more compact look */}
       <div
-        className="polaroid-card animate-breeze bg-white p-2.5 pb-6 rounded-2xl shadow-lg
-                   hover:shadow-2xl hover:scale-105 hover:rotate-0
-                   transition-all duration-300 ease-out"
+        className="polaroid-card animate-breeze bg-white p-2.5 pb-6 rounded-2xl shadow-lg hover:shadow-2xl hover:scale-105 hover:rotate-0 transition-all duration-300 ease-out"
         style={{
           transform: `rotate(${item.rotation}deg)`,
           ['--breeze-duration' as string]: `${3.5 + (item.animationDelay / 1000)}s`
@@ -68,12 +66,7 @@ export default function PolaroidCard({ item, onClick }: PolaroidCardProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold
-                         bg-gradient-to-r from-orange-500 to-pink-500
-                         hover:from-orange-600 hover:to-pink-600
-                         text-white rounded-full
-                         shadow-md hover:shadow-lg
-                         transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
             >
               <ExternalLink className="w-3 h-3" />
               Live Demo
